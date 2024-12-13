@@ -1,0 +1,255 @@
+2024-12-11 18:47:06,941 Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Application.start() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:584> exception=RuntimeError('This Application was not initialized via `Application.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 611, in start
+    self._check_initialized()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 464, in _check_initialized
+    raise RuntimeError(
+RuntimeError: This Application was not initialized via `Application.initialize`!
+2024-12-11 18:47:06,946 Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Updater.start_polling() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py:205> exception=RuntimeError('This Updater was not initialized via `Updater.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py", line 311, in start_polling
+    raise RuntimeError("This Updater was not initialized via `Updater.initialize`!")
+RuntimeError: This Updater was not initialized via `Updater.initialize`!
+2024-12-11 18:47:07,608 HTTP Request: POST https://api.telegram.org/botyour_bot_token/sendMessage "HTTP/1.1 404 Not Found"
+2024-12-11 18:47:07,612 HTTP Request: POST https://api.telegram.org/botyour_bot_token/getMe "HTTP/1.1 404 Not Found"
+2024-12-11 20:08:47,178 Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Application.start() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:584> exception=RuntimeError('This Application was not initialized via `Application.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 611, in start
+    self._check_initialized()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 464, in _check_initialized
+    raise RuntimeError(
+RuntimeError: This Application was not initialized via `Application.initialize`!
+2024-12-11 20:08:47,180 Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Updater.start_polling() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py:205> exception=RuntimeError('This Updater was not initialized via `Updater.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py", line 311, in start_polling
+    raise RuntimeError("This Updater was not initialized via `Updater.initialize`!")
+RuntimeError: This Updater was not initialized via `Updater.initialize`!
+2024-12-11 20:08:47,928 HTTP Request: POST https://api.telegram.org/botyour_bot_token/sendMessage "HTTP/1.1 404 Not Found"
+2024-12-11 20:08:47,933 HTTP Request: POST https://api.telegram.org/botyour_bot_token/getMe "HTTP/1.1 404 Not Found"
+2024-12-11 20:08:47,939 Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Application.initialize() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:468> exception=InvalidToken('The token `your_bot_token` was rejected by the server.')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 763, in initialize
+    await self.get_me()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 1957, in get_me
+    return await super().get_me(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 895, in get_me
+    result = await self._post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 619, in _post
+    return await self._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 354, in _do_post
+    return await super()._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 648, in _do_post
+    result = await request.post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 202, in post
+    result = await self._request_wrapper(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 381, in _request_wrapper
+    raise InvalidToken(message)
+telegram.error.InvalidToken: Not Found
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 487, in initialize
+    await self.bot.initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 300, in initialize
+    await super().initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 765, in initialize
+    raise InvalidToken(f"The token `{self._token}` was rejected by the server.") from exc
+telegram.error.InvalidToken: The token `your_bot_token` was rejected by the server.
+2024-12-11 20:14:29,237 Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Application.start() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:584> exception=RuntimeError('This Application was not initialized via `Application.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 611, in start
+    self._check_initialized()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 464, in _check_initialized
+    raise RuntimeError(
+RuntimeError: This Application was not initialized via `Application.initialize`!
+2024-12-11 20:14:29,239 Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Updater.start_polling() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py:205> exception=RuntimeError('This Updater was not initialized via `Updater.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py", line 311, in start_polling
+    raise RuntimeError("This Updater was not initialized via `Updater.initialize`!")
+RuntimeError: This Updater was not initialized via `Updater.initialize`!
+2024-12-11 20:14:30,118 HTTP Request: POST https://api.telegram.org/botyour_bot_token/sendMessage "HTTP/1.1 404 Not Found"
+2024-12-11 20:14:30,125 HTTP Request: POST https://api.telegram.org/botyour_bot_token/getMe "HTTP/1.1 404 Not Found"
+2024-12-11 20:14:30,128 Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Application.initialize() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:468> exception=InvalidToken('The token `your_bot_token` was rejected by the server.')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 763, in initialize
+    await self.get_me()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 1957, in get_me
+    return await super().get_me(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 895, in get_me
+    result = await self._post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 619, in _post
+    return await self._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 354, in _do_post
+    return await super()._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 648, in _do_post
+    result = await request.post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 202, in post
+    result = await self._request_wrapper(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 381, in _request_wrapper
+    raise InvalidToken(message)
+telegram.error.InvalidToken: Not Found
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 487, in initialize
+    await self.bot.initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 300, in initialize
+    await super().initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 765, in initialize
+    raise InvalidToken(f"The token `{self._token}` was rejected by the server.") from exc
+telegram.error.InvalidToken: The token `your_bot_token` was rejected by the server.
+2024-12-11 20:17:55,357 Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Application.start() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:584> exception=RuntimeError('This Application was not initialized via `Application.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 611, in start
+    self._check_initialized()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 464, in _check_initialized
+    raise RuntimeError(
+RuntimeError: This Application was not initialized via `Application.initialize`!
+2024-12-11 20:17:55,358 Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Updater.start_polling() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py:205> exception=RuntimeError('This Updater was not initialized via `Updater.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py", line 311, in start_polling
+    raise RuntimeError("This Updater was not initialized via `Updater.initialize`!")
+RuntimeError: This Updater was not initialized via `Updater.initialize`!
+2024-12-11 20:17:57,290 HTTP Request: POST https://api.telegram.org/botyour_bot_token/sendMessage "HTTP/1.1 404 Not Found"
+2024-12-11 20:17:57,296 HTTP Request: POST https://api.telegram.org/botyour_bot_token/getMe "HTTP/1.1 404 Not Found"
+2024-12-11 20:17:57,300 Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Application.initialize() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:468> exception=InvalidToken('The token `your_bot_token` was rejected by the server.')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 763, in initialize
+    await self.get_me()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 1957, in get_me
+    return await super().get_me(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 895, in get_me
+    result = await self._post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 619, in _post
+    return await self._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 354, in _do_post
+    return await super()._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 648, in _do_post
+    result = await request.post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 202, in post
+    result = await self._request_wrapper(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 381, in _request_wrapper
+    raise InvalidToken(message)
+telegram.error.InvalidToken: Not Found
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 487, in initialize
+    await self.bot.initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 300, in initialize
+    await super().initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 765, in initialize
+    raise InvalidToken(f"The token `{self._token}` was rejected by the server.") from exc
+telegram.error.InvalidToken: The token `your_bot_token` was rejected by the server.
+2024-12-11 20:29:19,393 Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Application.start() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:521> exception=RuntimeError('This Application was not initialized via `Application.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 548, in start
+    self._check_initialized()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 344, in _check_initialized
+    raise RuntimeError(
+RuntimeError: This Application was not initialized via `Application.initialize`!
+2024-12-11 20:29:19,396 Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Updater.start_polling() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py:184> exception=RuntimeError('This Updater was not initialized via `Updater.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py", line 259, in start_polling
+    raise RuntimeError("This Updater was not initialized via `Updater.initialize`!")
+RuntimeError: This Updater was not initialized via `Updater.initialize`!
+2024-12-11 20:29:20,262 HTTP Request: POST https://api.telegram.org/botyour_bot_token/sendMessage "HTTP/1.1 404 Not Found"
+2024-12-11 20:29:20,266 HTTP Request: POST https://api.telegram.org/botyour_bot_token/getMe "HTTP/1.1 404 Not Found"
+2024-12-11 20:29:20,271 Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Application.initialize() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:382> exception=InvalidToken('The token `your_bot_token` was rejected by the server.')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 591, in initialize
+    await self.get_me()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 1706, in get_me
+    return await super().get_me(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 381, in decorator
+    result = await func(self, *args, **kwargs)  # skipcq: PYL-E1102
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 736, in get_me
+    result = await self._post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 469, in _post
+    return await self._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 325, in _do_post
+    return await super()._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 497, in _do_post
+    return await request.post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 168, in post
+    result = await self._request_wrapper(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 326, in _request_wrapper
+    raise InvalidToken(message)
+telegram.error.InvalidToken: Not Found
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 399, in initialize
+    await self.bot.initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 271, in initialize
+    await super().initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 593, in initialize
+    raise InvalidToken(f"The token `{self._token}` was rejected by the server.") from exc
+telegram.error.InvalidToken: The token `your_bot_token` was rejected by the server.
+2024-12-11 20:31:58,431 Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Application.start() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:521> exception=RuntimeError('This Application was not initialized via `Application.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 548, in start
+    self._check_initialized()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 344, in _check_initialized
+    raise RuntimeError(
+RuntimeError: This Application was not initialized via `Application.initialize`!
+2024-12-11 20:31:58,433 Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Updater.start_polling() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py:184> exception=RuntimeError('This Updater was not initialized via `Updater.initialize`!')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_updater.py", line 259, in start_polling
+    raise RuntimeError("This Updater was not initialized via `Updater.initialize`!")
+RuntimeError: This Updater was not initialized via `Updater.initialize`!
+2024-12-11 20:31:59,268 HTTP Request: POST https://api.telegram.org/botyour_bot_token/getMe "HTTP/1.1 404 Not Found"
+2024-12-11 20:31:59,273 HTTP Request: POST https://api.telegram.org/bot8160702051:AAFAzAyDcTZsHV9EAwYNCZ-hua2aMhwlhhQ/sendMessage "HTTP/1.1 400 Bad Request"
+2024-12-11 20:31:59,277 Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Application.initialize() done, defined at /home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py:382> exception=InvalidToken('The token `your_bot_token` was rejected by the server.')>
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 591, in initialize
+    await self.get_me()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 1706, in get_me
+    return await super().get_me(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 381, in decorator
+    result = await func(self, *args, **kwargs)  # skipcq: PYL-E1102
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 736, in get_me
+    result = await self._post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 469, in _post
+    return await self._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 325, in _do_post
+    return await super()._do_post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 497, in _do_post
+    return await request.post(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 168, in post
+    result = await self._request_wrapper(
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/request/_baserequest.py", line 326, in _request_wrapper
+    raise InvalidToken(message)
+telegram.error.InvalidToken: Not Found
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_application.py", line 399, in initialize
+    await self.bot.initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/ext/_extbot.py", line 271, in initialize
+    await super().initialize()
+  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/telegram/_bot.py", line 593, in initialize
+    raise InvalidToken(f"The token `{self._token}` was rejected by the server.") from exc
+telegram.error.InvalidToken: The token `your_bot_token` was rejected by the server.

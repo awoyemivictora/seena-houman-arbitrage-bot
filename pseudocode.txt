@@ -1,0 +1,73 @@
+1. Initialize Logging:
+   - Set up a logging system to capture bot activity and errors.
+
+2. Load Configuration:
+   - Import environment variables from a `.env` file.
+   - Fetch API keys, secret keys, and other constants (e.g., trade fees, risk percentage, stop-loss, and take-profit).
+
+3. Define WebSocket Client Classes:
+   - XTWebsocketClient:
+     - Connect to XT.com WebSocket.
+     - Subscribe to order book streams.
+     - Listen for incoming data and log updates.
+   - KuCoin WebSocket Client:
+     - Authenticate using API credentials.
+     - Subscribe to KuCoin order book streams.
+     - Listen for incoming data and log updates.
+
+4. Define Handlers for WebSocket Events:
+   - On open: Log the successful connection.
+   - On message: Process received data (e.g., update order books).
+   - On error: Log errors.
+   - On close: Log connection closure.
+
+5. WebSocket Connection:
+   - XT.com:
+     - Connect to XT.com WebSocket.
+     - Subscribe to BTC/USDT market updates.
+     - Continuously listen for depth updates and update the local order book.
+   - KuCoin:
+     - Connect to KuCoin WebSocket.
+     - Subscribe to BTC/USDT market updates.
+     - Continuously listen for depth updates and update the local order book.
+
+6. Data Processing:
+   - Parse and store bids and asks from WebSocket messages into local order book structures for XT and KuCoin.
+
+7. Heartbeat Mechanism:
+   - Send periodic "ping" messages to WebSocket servers to keep connections alive.
+
+8. Balance Retrieval:
+   - Fetch account balances from both exchanges using their respective APIs.
+
+9. Spread Calculation:
+   - For each update in order books:
+     - Calculate the highest bid on one exchange and the lowest ask on the other.
+     - Include trading fees in the calculation to compute an adjusted spread.
+     - Log the spread.
+
+10. Detect Arbitrage Opportunities:
+    - Check if the adjusted spread exceeds a predefined threshold.
+    - If so, initiate trading logic.
+
+11. Execute Trades:
+    - XT.com:
+      - Place a limit buy order for BTC/USDT at the best available price.
+    - KuCoin:
+      - Place a limit sell order for BTC/USDT at the best available price.
+
+12. Risk Management:
+    - Calculate position size based on available balance and predefined risk percentage.
+    - Set stop-loss and take-profit orders based on entry price.
+
+13. Retry Mechanism:
+    - Retry WebSocket connections and trade executions using an exponential backoff strategy.
+
+14. Error Handling:
+    - Log all errors and exceptions.
+    - Reconnect and retry as necessary.
+
+15. Start Bot:
+    - Initialize XT.com and KuCoin WebSocket connections.
+    - Fetch initial order book data.
+    - Continuously monitor spreads, detect arbitrage opportunities, and execute trades.
