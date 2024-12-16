@@ -1,9 +1,7 @@
 import asyncio
 import websockets
 import json
-import time
 from typing import Dict
-
 import base64
 import uuid
 import random
@@ -11,7 +9,6 @@ import time
 from kucoin.client import Client
 from dotenv import load_dotenv
 import os
-import asyncio
 from pyxt.websocket.xt_websocket import XTWebsocketClient
 from pyxt.websocket.perp import PerpWebsocketStreamClient
 from kucoin.ws_client import KucoinWsClient
@@ -20,10 +17,8 @@ from logging.handlers import RotatingFileHandler
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
 import signal
-import json
 import hmac
 import hashlib
-import websockets
 import websocket
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from collections import deque
@@ -32,10 +27,6 @@ from get_kucoin_token import fetch_websocket_token
 import hmac
 import hashlib
 import aiohttp
-
-
-import asyncio
-import logging
 from decimal import Decimal
 
 
@@ -60,7 +51,7 @@ logging.basicConfig(
 )
 
 # Example log message
-logging.info("Logging system initialized.")
+logging.info("Trading Bot Initialized.")
 
 
 #=================== 2. Load Configuration: #===================
@@ -94,9 +85,7 @@ TAKE_PROFIT = float(os.getenv('TAKE_PROFIT', '0.02'))  # Default 2%
 # Define a minimum spread threshold (in percentage)
 MIN_ARBITRAGE_SPREAD_PERCENT = 0.001  # Example: 0.2% spread required to execute an arbitrage
 
-
-
-# Validate API credentials
+# Validate API credentials from Environment variables
 if not all([XT_API_KEY, XT_SECRET_KEY, KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE]):
     logging.error("Missing one or more API credentials. Please check your .env file.")
     raise ValueError("Missing required API credentials.")
@@ -157,20 +146,51 @@ trades = []  # To keep track of executed trades
 
 
 
+
+
+#======================================= STARTING THE BOT ================================================
 # Function to get user inputs
 async def get_user_inputs():
     """
-    Prompt user for initial parameters.
+    Get trading parameters from the user with validation.
     """
-    long_exchange = input("Enter Long Exchange (e.g., kucoin): ").lower()
-    short_exchange = input("Enter Short Exchange (e.g., xt): ").lower()
-    symbol = input("Enter Symbol (e.g., BTC): ").upper()
-    total_amount = Decimal(input("Enter Total Amount in tokens (e.g., 1.0): "))
-    chunk_size = Decimal(input("Enter Chunk Size (e.g., 0.1): "))
-    spread = Decimal(input("Enter Spread as decimal (e.g., 0.01 for 1%): "))
+    long_exchange = input("Enter Long Exchange (e.g., kucoin): ").strip().lower()
+    short_exchange = input("Enter Short Exchange (e.g., xt): ").strip().lower()
+    symbol = input("Enter Symbol (e.g., BTC): ").strip().upper()
+
+    # Validate Total Amount
+    while True:
+        try:
+            total_amount = Decimal(input("Enter Total Amount in tokens (e.g., 1.0): "))
+            if total_amount > 0:
+                break
+            print("Total amount must be greater than 0.")
+        except Exception:
+            print("Invalid input for Total Amount. Please enter a numeric value.")
+
+    # Validate Chunk Size
+    while True:
+        try:
+            chunk_size = Decimal(input("Enter Chunk Size (e.g., 0.1): "))
+            if chunk_size > 0 and chunk_size <= total_amount:
+                break
+            print(f"Chunk size must be greater than 0 and less than or equal to total amount ({total_amount}).")
+        except Exception:
+            print("Invalid input for Chunk Size. Please enter a numeric value.")
+
+    # Validate Spread
+    while True:
+        try:
+            spread = Decimal(input("Enter Spread as decimal (e.g., 0.01 for 1%): "))
+            if 0 < spread < 1:
+                break
+            print("Spread must be between 0 and 1 (e.g., 0.01 for 1%).")
+        except Exception:
+            print("Invalid input for Spread. Please enter a numeric value.")
 
     print(f"Total USD Value: {await calculate_usd_value(symbol, long_exchange, total_amount)}")
     return long_exchange, short_exchange, symbol, total_amount, chunk_size, spread
+
 
 
 # Function for symbol adjustments
@@ -274,10 +294,25 @@ async def manage_trading(long_exchange, short_exchange, symbol, total_amount, ch
 async def calculate_usd_value(symbol, exchange, amount):
     """
     Calculate the USD equivalent of the total amount.
+    Wait until the order book for the specified exchange is populated.
     """
-    best_bid = Decimal(order_books[exchange]["bids"][0][0])
-    usd_value = best_bid * amount
-    return usd_value
+    retries = 10  # Retry up to 10 times
+    delay = 1  # 1-second delay between retries
+
+    for attempt in range(retries):
+        try:
+            best_bid = Decimal(order_books[exchange]["bids"][0][0])
+            usd_value = best_bid * amount
+            return usd_value
+        except (IndexError, KeyError):
+            if attempt < retries - 1:
+                print(f"Waiting for order book data for {exchange}... (attempt {attempt + 1}/{retries})")
+                await asyncio.sleep(delay)
+            else:
+                raise RuntimeError(f"Order book data for {exchange} is not available after {retries} retries.")
+
+    return Decimal(0)  # Fallback value if no data is available
+
 
 
 
@@ -883,7 +918,7 @@ async def process_kucoin_level2_updates(message):
                     kucoin_order_book["bids"].append((price, size))
                     kucoin_order_book["bids"] = deque(sorted(kucoin_order_book["bids"], reverse=True)[:5], maxlen=5)
 
-    logging.info(f"Updated KuCoin order book. Current top 5 bids and asks:\nBids: {list(kucoin_order_book['bids'])}\nAsks: {list(kucoin_order_book['asks'])}")
+    # logging.info(f"Updated KuCoin order book. Current top 5 bids and asks:\nBids: {list(kucoin_order_book['bids'])}\nAsks: {list(kucoin_order_book['asks'])}")
 
 
 async def subscribe_to_kucoin_level2(symbol): # This function will await process_kucoin_level2_updates
@@ -1011,7 +1046,7 @@ def process_xt_order_update(message):
             elif status == "PARTIALLY_FILLED":
                 logging.info(f"Order {order_id} partially filled.")
             elif status == "CANCELED":
-                logging.info(f"Order {order_id} canceled.")
+                logging.info(f"Order {order_id} cancelled.")
             else:
                 logging.info(f"Order {order_id} status updated: {status}")
 
@@ -1238,8 +1273,8 @@ async def process_fetched_xt_market_depth(data):
             logging.warning("No asks received in the update.")
 
         logging.info(f"XT Market Depth updated.")
-        logging.info(f"Top 5 Bids: {list(order_books['xt']['bids'])}")
-        logging.info(f"Top 5 Asks: {list(order_books['xt']['asks'])}")
+        # logging.info(f"Top 5 Bids: {list(order_books['xt']['bids'])}")
+        # logging.info(f"Top 5 Asks: {list(order_books['xt']['asks'])}")
     except Exception as e:
         logging.error(f"Error processing market depth: {e}")
 
@@ -1647,6 +1682,15 @@ async def main():
     """
     Main function to initialize and run the trading bot.
     """
+    # Start WebSocket connections (replace with actual implementations)
+    websocket_tasks = asyncio.gather(
+        fetch_kucoin_data(),
+        fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
+    )
+
+    # Wait a short period to allow the order books to populate
+    await asyncio.sleep(5)  # Adjust this value based on WebSocket latency
+
     # Get user inputs
     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
 
@@ -1654,12 +1698,12 @@ async def main():
     symbol, total_amount = await adjust_symbol(long_exchange, symbol, total_amount)
     symbol, total_amount = await adjust_symbol(short_exchange, symbol, total_amount)
 
-    # Start WebSocket connections (replace with actual implementations)
-    await asyncio.gather(
-        subscribe_to_kucoin_level2(symbol),
-        xt_websocket(XT_API_KEY, XT_SECRET_KEY),
-        manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread),
-    )
+    # Manage trading
+    await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
+
+    # Ensure WebSocket tasks run concurrently
+    await websocket_tasks
+
 
 
 if __name__ == "__main__":
