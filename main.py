@@ -1,226 +1,3 @@
-# import json
-# import websockets
-# import asyncio
-# import logging
-# import time
-# import uuid  # To generate a unique connectId
-# from dotenv import load_dotenv
-# import os
-# import requests
-
-# # Configure logging
-# logging.basicConfig(
-#     filename='trading_bot.log',
-#     level=logging.INFO,
-#     format='%(asctime)s - %(levelname)s - %(message)s'
-# )
-
-# # Load environment variables from .env file
-# load_dotenv()
-
-# # Fetch API credentials from environment variables
-# XT_API_KEY = os.getenv("XT_API_KEY")
-# XT_SECRET_KEY = os.getenv("XT_SECRET_KEY")
-# XT_API_HOST = "https://sapi.xt.com"
-
-# KUCOIN_API_KEY = os.getenv("KUCOIN_API_KEY")
-# KUCOIN_SECRET_KEY = os.getenv("KUCOIN_SECRET_KEY")
-# KUCOIN_PASSPHRASE = os.getenv("KUCOIN_PASSPHRASE")
-# KUCOIN_TOKEN = os.getenv("KUCOIN_TOKEN")
-
-# # Global order book data
-# xt_order_book = {"bids": [], "asks": []}
-# kucoin_order_book = {"bids": [], "asks": []}
-
-# # Process XT order book data
-# def process_xt_data(data):
-#     global xt_order_book
-#     if 'bids' in data and 'asks' in data:
-#         xt_order_book = {
-#             "bids": sorted([[float(price), float(amount)] for price, amount in data.get("b", [])], reverse=True),
-#             "asks": sorted([[float(price), float(amount)] for price, amount in data.get("a", [])])
-#         }
-#     else:
-#         logging.warning(f"Unexpected XT data structure: {data}")
-#     logging.info(f"Updated XT Order Book: {xt_order_book}")
-
-# # Process KuCoin order book data
-# def process_kucoin_data(data):
-#     global kucoin_order_book
-#     if 'bids' in data and 'asks' in data:
-#         kucoin_order_book = {
-#             "bids": sorted([[float(price), float(amount)] for price, amount in data["bids"]], reverse=True),
-#             "asks": sorted([[float(price), float(amount)] for price, amount in data["asks"]])
-#         }
-#     else:
-#         logging.warning(f"Unexpected KuCoin data structure: {data}")
-#     logging.info(f"Updated KuCoin Order Book: {kucoin_order_book}")
-
-# # Detect arbitrage opportunities
-# def detect_arbitrage():
-#     if not xt_order_book["bids"] or not kucoin_order_book["asks"]:
-#         return None
-
-#     # XT highest bid and KuCoin lowest ask
-#     xt_highest_bid = xt_order_book["bids"][0][0]
-#     kucoin_lowest_ask = kucoin_order_book["asks"][0][0]
-
-#     # KuCoin highest bid and XT lowest ask
-#     kucoin_highest_bid = kucoin_order_book["bids"][0][0]
-#     xt_lowest_ask = xt_order_book["asks"][0][0]
-
-#     # Detect opportunities
-#     if xt_highest_bid > kucoin_lowest_ask:
-#         profit = xt_highest_bid - kucoin_lowest_ask
-#         logging.info(f"Arbitrage Opportunity! Buy on KuCoin at {kucoin_lowest_ask} and sell on XT at {xt_highest_bid}. Profit: {profit}")
-#         return ("kucoin", "xt", kucoin_lowest_ask, xt_highest_bid)
-
-#     elif kucoin_highest_bid > xt_lowest_ask:
-#         profit = kucoin_highest_bid - xt_lowest_ask
-#         logging.info(f"Arbitrage Opportunity! Buy on XT at {xt_lowest_ask} and sell on KuCoin at {kucoin_highest_bid}. Profit: {profit}")
-#         return ("xt", "kucoin", xt_lowest_ask, kucoin_highest_bid)
-
-#     return None
-
-# # Unified Order Placement Function
-# def place_order(exchange, side, price, quantity):
-#     try:
-#         if exchange == "xt":
-#             # XT order placement logic
-#             order = {
-#                 "apiKey": XT_API_KEY,
-#                 "side": side,
-#                 "price": price,
-#                 "quantity": quantity
-#             }
-#             response = requests.post(f"{XT_API_HOST}/v4/order", json=order)
-#             response.raise_for_status()
-#             logging.info(f"XT Order Response: {response.json()}")
-#         elif exchange == "kucoin":
-#             # KuCoin order placement logic
-#             order = {
-#                 "apiKey": KUCOIN_API_KEY,
-#                 "passphrase": KUCOIN_PASSPHRASE,
-#                 "side": side,
-#                 "price": price,
-#                 "quantity": quantity
-#             }
-#             response = requests.post(f"https://api.kucoin.com/api/v1/orders", json=order)
-#             response.raise_for_status()
-#             logging.info(f"KuCoin Order Response: {response.json()}")
-#         else:
-#             logging.error(f"Unsupported exchange: {exchange}")
-#     except Exception as e:
-#         logging.error(f"Order Placement Failed on {exchange}: {e}")
-
-# # Execute arbitrage trade
-# def execute_trade(buy_exchange, sell_exchange, buy_price, sell_price, quantity):
-#     logging.info(f"Executing Arbitrage: Buy on {buy_exchange} at {buy_price}, Sell on {sell_exchange} at {sell_price}, Quantity: {quantity}")
-#     place_order(buy_exchange, "buy", buy_price, quantity)
-#     place_order(sell_exchange, "sell", sell_price, quantity)
-
-# # XT WebSocket connection
-# async def xt_websocket():
-#     url = "wss://stream.xt.com/public"  # Confirm this URL from XT API documentation
-#     retries = 0
-#     while retries < 5:
-#         try:
-#             async with websockets.connect(url) as websocket:
-#                 subscription_message = {
-#                     "method": "subscribe",
-#                     "params": ["trade.btc_usdt"],
-#                     "id": 1
-#                 }
-#                 await websocket.send(json.dumps(subscription_message))
-#                 logging.info(f"Subscription sent to XT: {subscription_message}")
-
-#                 while True:
-#                     response = await websocket.recv()
-#                     try:
-#                         message = json.loads(response)
-#                         if "data" in message:
-#                             process_xt_data(message["data"])
-#                     except json.JSONDecodeError:
-#                         logging.error(f"Invalid JSON from XT: {response}")
-#         except Exception as e:
-#             logging.error(f"XT WebSocket Error: {e}")
-#             retries += 1
-#             await asyncio.sleep(2 ** retries)  # Exponential backoff
-
-# # KuCoin WebSocket connection
-# async def kucoin_websocket():
-#     retries = 0
-#     while retries < 5:
-#         try:
-#             token = KUCOIN_TOKEN
-#             connect_id = str(uuid.uuid4())
-#             url = f"wss://ws-api-spot.kucoin.com/?token={token}&connectId={connect_id}"
-
-#             async with websockets.connect(url) as websocket:
-#                 logging.info("Connected to KuCoin WebSocket")
-
-#                 subscription_message = {
-#                     "id": connect_id,
-#                     "type": "subscribe",
-#                     "topic": "/market/level2:BTC-USDT",
-#                     "privateChannel": False,
-#                     "response": True
-#                 }
-#                 await websocket.send(json.dumps(subscription_message))
-#                 logging.info(f"Subscription sent to KuCoin: {subscription_message}")
-
-#                 # Fetch initial snapshot
-#                 initial_snapshot_url = "https://api.kucoin.com/api/v1/market/orderbook/level2_20?symbol=BTC-USDT"
-#                 response = requests.get(initial_snapshot_url, headers={"Authorization": f"Bearer {KUCOIN_TOKEN}"})
-#                 if response.status_code == 200:
-#                     snapshot = response.json()
-#                     process_kucoin_data(snapshot['data'])
-#                     logging.info(f"KuCoin Initial Snapshot: {snapshot}")
-#                 else:
-#                     logging.error(f"Failed to fetch KuCoin snapshot: {response.text}")
-
-#                 while True:
-#                     response = await websocket.recv()
-#                     try:
-#                         message = json.loads(response)
-#                         logging.info(f"KuCoin Response: {message}")
-#                         if "data" in message:
-#                             process_kucoin_data(message["data"])
-#                     except json.JSONDecodeError:
-#                         logging.error(f"Invalid JSON from KuCoin: {response}")
-#         except Exception as e:
-#             logging.error(f"KuCoin WebSocket Error: {e}")
-#             retries += 1
-#             await asyncio.sleep(2 ** retries)  # Exponential backoff
-
-# # Main loop
-# async def main():
-#     asyncio.create_task(xt_websocket())
-#     asyncio.create_task(kucoin_websocket())
-
-#     while True:
-#         opportunity = detect_arbitrage()
-#         if opportunity:
-#             buy_exchange, sell_exchange, buy_price, sell_price = opportunity
-#             quantity = 0.01  # Example quantity
-#             execute_trade(buy_exchange, sell_exchange, buy_price, sell_price, quantity)
-#         await asyncio.sleep(1)  # Polling interval
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
-
-
-
-
-
-
-
-
-
-
-
-
-
 import base64
 import uuid
 import random
@@ -241,8 +18,12 @@ import json
 import hmac
 import hashlib
 import websockets
+import websocket
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from collections import deque
+import threading
+from get_kucoin_token import fetch_websocket_token
+
 
 #=================== 1. Initialize Logging: #===================
 #    - Set up a logging system to capture bot activity and errors.
@@ -282,11 +63,12 @@ XT_API_HOST = "https://sapi.xt.com"
 KUCOIN_API_KEY = os.getenv("KUCOIN_API_KEY")
 KUCOIN_SECRET_KEY = os.getenv("KUCOIN_SECRET_KEY")
 KUCOIN_PASSPHRASE = os.getenv("KUCOIN_PASSPHRASE")
-KUCOIN_TOKEN = os.getenv("KUCOIN_TOKEN")
 
 # Define trading fees for both exchanges
 XT_TRADE_FEE_PERCENT = 0.1  # Example: 0.1% for XT.com
 KUCOIN_TRADE_FEE_PERCENT = 0.1  # Example: 0.1% for KuCoin
+STOP_LOSS = float(os.getenv('STOP_LOSS', '0.01'))  # Default 1%
+TAKE_PROFIT = float(os.getenv('TAKE_PROFIT', '0.02'))  # Default 2%
 
 # Define a minimum spread threshold (in percentage)
 MIN_ARBITRAGE_SPREAD_PERCENT = 0.001  # Example: 0.2% spread required to execute an arbitrage
@@ -328,14 +110,14 @@ logging.debug(f"XT API Key: {XT_API_KEY[:4]}*** (masked for security)")
 logging.debug(f"KuCoin API Key: {KUCOIN_API_KEY[:4]}*** (masked for security)")
 
 # Global order books for XT and KuCoin
-xt_order_book = {
-    "bids": [], 
-    "asks": []
-}
-kucoin_order_book = {
-    "bids": [], 
-    "asks": []
-}
+# xt_order_book = {
+#     "bids": [], 
+#     "asks": []
+# }
+# kucoin_order_book = {
+#     "bids": [], 
+#     "asks": []
+# }
 
 
 #=================== 3. Define WebSocket Client Classes: #===================
@@ -376,7 +158,7 @@ class WsToken:
             "KC-API-SIGN": self.signature
         }
 
-
+# OLD ONES
 class XTWebsocketClient:
     """WebSocket Client for XT.com"""
     def __init__(self, uri):
@@ -420,6 +202,20 @@ class XTWebsocketClient:
         except Exception as e:
             logging.error(f"Error in WebSocket listen: {e}")
 
+    async def on_message(self, message):
+        try:
+            data = json.loads(message)
+            if "depthUpdate" in data:
+                self.update_order_book("XT", data["bids"], data["asks"])
+        except Exception as e:
+            logging.error(f"Error processing XT message: {e}")
+
+    async def update_order_book(self, exchange, bids, asks):
+        global order_books
+        order_books[exchange]["bids"] = sorted(bids, key=lambda x: -float(x[0]))
+        order_books[exchange]["asks"] = sorted(asks, key=lambda x: float(x[0]))
+        logging.info(f"{exchange} order book updated: {len(bids)} bids, {len(asks)} asks")
+
 
 class KucoinWebSocketClient:
     """WebSocket Client for KuCoin"""
@@ -448,6 +244,20 @@ class KucoinWebSocketClient:
         except Exception as e:
             logging.error(f"Error in WebSocket listen: {e}")
 
+    async def on_message(self, message):
+        try:
+            data = json.loads(message)
+            if "depthUpdate" in data:
+                self.update_order_book("KuCoin", data["bids"], data["asks"])
+        except Exception as e:
+            logging.error(f"Error processing KuCoin message: {e}")
+
+    async def update_order_book(self, exchange, bids, asks):
+        global order_books
+        order_books[exchange]["bids"] = sorted(bids, key=lambda x: -float(x[0]))
+        order_books[exchange]["asks"] = sorted(asks, key=lambda x: float(x[0]))
+        logging.info(f"{exchange} order book updated: {len(bids)} bids, {len(asks)} asks")
+
 
 
 #=================== 4. Define Handlers for WebSocket Events: #===================
@@ -457,30 +267,55 @@ class KucoinWebSocketClient:
 #    - On close: Log connection closure.
 
 # Handlers to handle WebSocket events for XT.com
-def handle_open(ws):
-    """Handle WebSocket connection open event."""
-    logging.info("WebSocket connection opened.")
+# def handle_open(ws):
+#     """Handle WebSocket connection open event."""
+#     logging.info("WebSocket connection opened.")
 
-def handle_message(ws, message):
-    """Handle incoming WebSocket messages."""
+# def handle_message(ws, message):
+#     """Handle incoming WebSocket messages."""
+#     try:
+#         # Process the message (e.g., update order books or log data)
+#         data = json.loads(message)
+#         logging.info(f"Message received: {data}")
+#         # Example: Update a global or shared data structure (e.g., order book)
+#         # xt_order_book or kucoin_order_book updates can be implemented here
+#     except json.JSONDecodeError as e:
+#         logging.error(f"Error decoding JSON message: {message}, Error: {e}")
+#     except Exception as e:
+#         logging.error(f"Unexpected error processing message: {message}, Error: {e}")
+
+# def handle_error(ws, error):
+#     """Handle WebSocket error event."""
+#     logging.error(f"WebSocket encountered an error: {error}")
+
+# def handle_close(ws, close_status_code, close_msg):
+#     """Handle WebSocket connection closure event."""
+#     logging.warning(f"WebSocket connection closed. Status Code: {close_status_code}, Message: {close_msg}")
+
+def handle_on_open(exchange_name, ws, subscribe_callback):
+    """Handler for WebSocket open event."""
+    logging.info(f"{exchange_name} WebSocket connection opened.")
+    subscribe_callback()
+
+
+def handle_on_message(exchange_name, ws, message, process_callback):
+    """Handler for WebSocket message event."""
     try:
-        # Process the message (e.g., update order books or log data)
         data = json.loads(message)
-        logging.info(f"Message received: {data}")
-        # Example: Update a global or shared data structure (e.g., order book)
-        # xt_order_book or kucoin_order_book updates can be implemented here
-    except json.JSONDecodeError as e:
-        logging.error(f"Error decoding JSON message: {message}, Error: {e}")
+        process_callback(data)
     except Exception as e:
-        logging.error(f"Unexpected error processing message: {message}, Error: {e}")
+        logging.error(f"{exchange_name} WebSocket message processing error: {e}")
 
-def handle_error(ws, error):
-    """Handle WebSocket error event."""
-    logging.error(f"WebSocket encountered an error: {error}")
 
-def handle_close(ws, close_status_code, close_msg):
-    """Handle WebSocket connection closure event."""
-    logging.warning(f"WebSocket connection closed. Status Code: {close_status_code}, Message: {close_msg}")
+def handle_on_error(exchange_name, ws, error):
+    """Handler for WebSocket error event."""
+    logging.error(f"{exchange_name} WebSocket encountered an error: {error}")
+
+
+def handle_on_close(exchange_name, ws, close_status_code, close_msg):
+    """Handler for WebSocket close event."""
+    logging.info(f"{exchange_name} WebSocket connection closed.")
+
 
 def handle_ping(ws, ping_data):
     """Handle WebSocket ping event."""
@@ -537,10 +372,10 @@ async def authenticate_xt(api_key, secret_key):
                         logging.info(f"XT.com message received: {message}")
 
                         # Process data (e.g., update global order book)
-                        # if "params" in message and "bids" in message["params"] and "asks" in message["params"]:
-                        #     xt_order_book["bids"] = message["params"]["bids"]
-                        #     xt_order_book["asks"] = message["params"]["asks"]
-                        #     logging.info("XT.com order book updated.")
+                        if "params" in message and "bids" in message["params"] and "asks" in message["params"]:
+                            xt_order_book["bids"] = message["params"]["bids"]
+                            xt_order_book["asks"] = message["params"]["asks"]
+                            logging.info("XT.com order book updated.")
 
                         # Push the processed message into the queue
                         # await order_books["xt"].append(message)
@@ -567,7 +402,7 @@ async def authenticate_kucoin(api_key, secret_key, passphrase):
     Connect to KuCoin WebSocket, subscribe to BTC/USDT updates, and listen for depth updates.
     """
     # Use the valid token retrieved
-    token = KUCOIN_TOKEN
+    token = fetch_websocket_token()
     connect_id = str(uuid.uuid4())  # Generate a unique connect ID
 
     # Construct WebSocket URL with token and connect ID
@@ -580,9 +415,10 @@ async def authenticate_kucoin(api_key, secret_key, passphrase):
             async with websockets.connect(stream_url, ping_interval=30, ping_timeout=10) as websocket:
                 # Authenticate and subscribe
                 subscription_message = {
-                    "id": 1,
+                    "id": int(time.time() * 1000),
                     "type": "subscribe",
-                    "topic": "/market/level2:BTC-USDT",
+                    # "topic": "/market/level2:BTC-USDT",
+                    "topic": "/market/ticker:BTC-USDT",
                     "privateChannel": False,
                     "response": True
                 }
@@ -600,10 +436,10 @@ async def authenticate_kucoin(api_key, secret_key, passphrase):
                         logging.info(f"KuCoin message received: {message}")
 
                         # Process the message only if it contains valid order book data
-                        # if "data" in message and "bids" in message["data"] and "asks" in message["data"]:
-                        #     kucoin_order_book["bids"] = message["data"]["bids"]
-                        #     kucoin_order_book["asks"] = message["data"]["asks"]
-                        #     logging.info("KuCoin order book updated.")
+                        if "data" in message and "bids" in message["data"] and "asks" in message["data"]:
+                            kucoin_order_book["bids"] = message["data"]["bids"]
+                            kucoin_order_book["asks"] = message["data"]["asks"]
+                            logging.info("KuCoin order book updated.")
 
                         # Push the processed message into the queue
                         # await order_books["kucoin"].append(message)
@@ -631,6 +467,19 @@ async def authenticate_kucoin(api_key, secret_key, passphrase):
 # 6. Data Processing:
 #    - Parse and store bids and asks from WebSocket messages into local order book structures for XT and KuCoin.
 #=================== PROCESSING WEBSOCKET DATA FROM XT.COM ===================
+# Monitor Order Books
+def monitor_order_books(interval=5):
+    while True:
+        try:
+            logging.info("Order Book Snapshot:")
+            for exchange, book in order_books.items():
+                best_bid = book["bids"][0] if book["bids"] else ("N/A", "N/A")
+                best_ask = book["asks"][0] if book["asks"] else ("N/A", "N/A")
+                logging.info(f"{exchange} - Best Bid: {best_bid}, Best Ask: {best_ask}")
+        except Exception as e:
+            logging.error(f"Error monitoring order books: {e}")
+        time.sleep(interval)
+
 
 # Log the updated order books
 async def log_order_book_data():
@@ -726,37 +575,15 @@ async def handle_kucoin_order_book_data(data, queue):
 # 7. Heartbeat Mechanism:
 #    - Send periodic "ping" messages to WebSocket servers to keep connections alive.
 #=================== SENDING HEARTBEAT TO KEEP XT.COM WEBSOCKET CONNECTION ALIVE ==============
-# async def send_heartbeat(client):
-#     """
-#     Send periodic 'ping' messages to the WebSocket server to keep the connection alive.
-#     :param client: The WebSocket client instance.
-#     """
-#     while True:
-#         try:
-#             # Send a heartbeat message
-#             ping_message = json.dumps({"ping": time.time()})
-#             await client.send(ping_message)
-#             logging.info("Sent heartbeat to WebSocket server.")
-#         except Exception as e:
-#             logging.error(f"Error during heartbeat: {e}")
-#         await asyncio.sleep(30)  # Send ping every 30 seconds
+def start_heartbeat_threads(xt_client, kucoin_client):
+    """Start heartbeat threads for both WebSocket clients."""
+    xt_heartbeat_thread = threading.Thread(target=send_heartbeat, args=(xt_client,), daemon=True)
+    kucoin_heartbeat_thread = threading.Thread(target=send_heartbeat, args=(kucoin_client,), daemon=True)
 
-# #=================== HEARTBEAT FOR KUCOIN WEBSOCKET CONNECTION =================
-# async def send_kucoin_heartbeat(client):
-#     """
-#     Send periodic 'ping' messages to KuCoin WebSocket to keep the connection alive.
-#     :param client: The WebSocket client instance.
-#     """
-#     while True:
-#         try:
-#             # KuCoin requires a different ping format (if specified)
-#             ping_message = json.dumps({"id": int(time.time() * 1000), "type": "ping"})
-#             await client.send(ping_message)
-#             logging.info("Sent heartbeat to KuCoin WebSocket server.")
-#         except Exception as e:
-#             logging.error(f"Error during KuCoin heartbeat: {e}")
-#         await asyncio.sleep(30)  # Send ping every 30 seconds
+    xt_heartbeat_thread.start()
+    kucoin_heartbeat_thread.start()
 
+    logging.info("Heartbeat threads started.")
 
 
 # 8. Balance Retrieval:
@@ -1023,279 +850,51 @@ def retry_trade_execution(execute_trade_function, max_retries=3):
 #     - Fetch initial order book data.
 #     - Continuously monitor spreads, detect arbitrage opportunities, and execute trades.
 #=================== Unified Entry Point for WebSockets ==============
-async def main():
-    # Load credentials from environment variables
-    xt_api_key = os.getenv("XT_API_KEY")
-    xt_secret_key = os.getenv("XT_SECRET_KEY")
-    kucoin_api_key = os.getenv("KUCOIN_API_KEY")
-    kucoin_secret_key = os.getenv("KUCOIN_SECRET_KEY")
-    kucoin_passphrase = os.getenv("KUCOIN_PASSPHRASE")
-
-    # Global order book data
-    xt_order_book = {"bids": [], "asks": []}
-    kucoin_order_book = {"bids": [], "asks": []}
-
-    # PSEUDOCODE
-    # Step 1: Authenticate Both Exchanges
-    #======== Authenticating both XT.com andn KuCoin =========
-    async def authenticate_all(xt_api_key, xt_secret_key, kucoin_api_key, kucoin_secret_key, kucoin_passphrase):
-        try:
-            await asyncio.gather(
-                authenticate_xt(xt_api_key, xt_secret_key),
-                authenticate_kucoin(kucoin_api_key, kucoin_secret_key, kucoin_passphrase)
-            )
-            logging.info("Both XT and KuCoin authenticated successfully.")
-        except Exception as e:
-            logging.error(f"Authentication failed: {e}")
-            raise SystemExit("Exiting program due to failed authentication.")
-    await authenticate_all(xt_api_key, xt_secret_key, kucoin_api_key, kucoin_secret_key, kucoin_passphrase)
-
-    # Step 2: Initialize Clients
-    xt_client = XTWebsocketClient(api_key=xt_api_key, secret_key=xt_secret_key)
-    kucoin_client = KucoinWebSocketClient(api_key=kucoin_api_key, secret_key=kucoin_secret_key, passphrase=kucoin_passphrase)
-    
-    # Step 3: Fetch Initial Order Books  for XT.com and KuCoin.
-    async def fetch_initial_order_books(xt_client, kucoin_client, xt_order_book, kucoin_order_book):
-        try:
-            xt_order_book.update(await xt_client.subscribe("BTC/USDT"))
-            kucoin_order_book.update(await kucoin_client.listen("BTC/USDT"))
-            logging.info(f"XT Order book: {xt_order_book}")
-            logging.info(f"Kucoin Order book: {kucoin_order_book}")
-        except Exception as e:
-            logging.error(f"Error fetching initial order books: {e}")
-            raise SystemExit("Exiting program due to failed initial order book fetch.")
-    await fetch_initial_order_books(xt_client, kucoin_client, xt_order_book, kucoin_order_book)
-
-    # Step 4: Run WebSocket Clients
-    # async def run_clients(xt_client, kucoin_client, xt_order_book, kucoin_order_book):
-    #     await asyncio.gather(
-    #         handle_xt_client(xt_client, xt_order_book),
-    #         handle_kucoin_client(kucoin_client, kucoin_order_book)
-    #     )
-
-    # await run_clients(xt_client, kucoin_client, xt_order_book, kucoin_order_book)
-
-
-    # async def handle_xt_client(xt_client, xt_order_book):
-    #     try:
-    #         await xt_client.connect()
-    #         await xt_client.subscribe("BTC/USDT")
-    #         while True:
-    #             data = await xt_client.listen()
-    #             process_xt_data(data)
-    #             xt_order_book.update(data)
-    #     except Exception as e:
-    #         logging.error(f"XT WebSocket Error: {e}")
-    #         raise SystemExit("Terminating due to XT WebSocket failure.")
-
-    # async def handle_kucoin_client(kucoin_client, kucoin_order_book):
-    #     try:
-    #         await kucoin_client.connect()
-    #         await kucoin_client.subscribe("/market/level2:BTC-USDT")
-    #         while True:
-    #             data = await kucoin_client.listen()
-    #             process_kucoin_data(data)
-    #             kucoin_order_book.update(data)
-    #     except Exception as e:
-    #         logging.error(f"KuCoin WebSocket Error: {e}")
-    #         raise SystemExit("Terminating due to KuCoin WebSocket failure.")
-
-
-    
-
-
-    #============== STOP HERE==============
-
-    # # Authenticating both XT.com and KuCoin
-    # async def authenticate_all():
-    #     """
-    #     Authenticate XT and KuCoin concurrently.
-    #     """
-    #     try:
-    #         await asyncio.gather(
-    #             authenticate_xt(xt_api_key, xt_secret_key),
-    #             authenticate_kucoin(kucoin_api_key, kucoin_secret_key, kucoin_passphrase),
-    #         )
-    #         logging.info("Both XT and KuCoin authenticated successfully.")
-    #     except Exception as e:
-    #         logging.error(f"Authentication failed: {e}")
-    #         raise SystemExit("Exiting program due to failed authentication.")
-
-    # # Authenticating Websocket for both XT and KuCoin
-    # await authenticate_all()
-
-    # # Initialize XT and Kucoin client
-    # xt_client = XTWebsocketClient(api_key=xt_api_key, secret_key=xt_secret_key)
-    # kucoin_client = KucoinWebSocketClient(api_key=kucoin_api_key, secret_key=kucoin_secret_key, passphrase=kucoin_passphrase)
-
-    # # Connecting and subscribing to both XT.com and KuCoin
-    # async def connect_and_subscribe_all():
-    #     try:
-    #         await asyncio.gather(
-    #             xt_client.connect(),
-    #             kucoin_client.connect(),
-    #         )
-    #         await asyncio.gather(
-    #             xt_client.subscribe("BTC/USDT"),
-    #             kucoin_client.subscribe("/market/ticker:BTC-USDT"),
-    #         )
-    #         logging.info("Both XT and KuCoin subscriptions successful.")
-    #     except Exception as e:
-    #         logging.error(f"Connection or subscription failed: {e}")
-    #         exit(1)
-
-    # await connect_and_subscribe_all()
-
-    # # Helper functions for data processing
-    # async def xt_websocket_handler():
-    #     try:
-    #         while True:
-    #             data = await xt_client.listen()
-    #             process_xt_data(data)
-    #             xt_order_book.update(data)
-    #             await send_heartbeat(xt_client)
-    #     except Exception as e:
-    #         logging.error(f"XT WebSocket error: {e}")
-    #         exit(1)
-
-    # async def kucoin_websocket_handler():
-    #     try:
-    #         while True:
-    #             data = await kucoin_client.listen()
-    #             process_kucoin_data(data)
-    #             kucoin_order_book.update(data)
-    #             await send_kucoin_heartbeat(kucoin_client)
-    #     except Exception as e:
-    #         logging.error(f"KuCoin WebSocket error: {e}")
-    #         exit(1)
-
-    # async def arbitrage_monitor():
-    #     while True:
-    #         try:
-    #             spread = calculate_spread_with_fees(
-    #                 xt_order_book["bids"], kucoin_order_book["asks"]
-    #             )
-    #             arbitrage_opportunity = detect_arbitrage()
-    #             if arbitrage_opportunity:
-    #                 buy_exchange, sell_exchange, buy_price, sell_price, quantity = arbitrage_opportunity
-    #                 execute_trade(buy_exchange, sell_exchange, buy_price, sell_price, quantity)
-    #             await asyncio.sleep(0.5)
-    #         except Exception as e:
-    #             logging.error(f"Error in arbitrage monitoring: {e}")
-
-    # async def fetch_initial_order_books():
-    #     try:
-    #         xt_order_book.update(await xt_client.fetch_order_book("BTC/USDT"))
-    #         kucoin_order_book.update(await kucoin_client.fetch_order_book("BTC/USDT"))
-    #     except Exception as e:
-    #         logging.error(f"Error fetching initial order books: {e}")
-    #         exit(1)
-
-    # await fetch_initial_order_books()
-
-    # # Run all tasks concurrently
-    # await asyncio.gather(
-    #     xt_websocket_handler(),
-    #     kucoin_websocket_handler(),
-    #     arbitrage_monitor(),
-    # )
-
-async def main():
-    # Load credentials from environment variables
-    xt_api_key = os.getenv("XT_API_KEY")
-    xt_secret_key = os.getenv("XT_SECRET_KEY")
-    kucoin_api_key = os.getenv("KUCOIN_API_KEY")
-    kucoin_secret_key = os.getenv("KUCOIN_SECRET_KEY")
-    kucoin_passphrase = os.getenv("KUCOIN_PASSPHRASE")
-
+async def authenticate_all(XT_API_KEY, XT_SECRET_KEY, KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE):
     try:
-        tasks = [
-            asyncio.create_task(authenticate_xt(xt_api_key, xt_secret_key)),
-            asyncio.create_task(authenticate_kucoin(kucoin_api_key, kucoin_secret_key, kucoin_passphrase)),
-        ]
-        await asyncio.gather(*tasks)       
-       
-       # Start WebSocket handlers to listen for order book updates
-        websocket_tasks = [
-            asyncio.create_task(handle_xt_order_book_data(await get_xt_order_book_data())),
-            asyncio.create_task(handle_kucoin_order_book_data(await get_kucoin_order_book_data())),
-        ]
-        await asyncio.gather(*websocket_tasks)
-
-        # pending_tasks = asyncio.all_tasks()
-        # logging.info(f"Pending tasks: {pending_tasks}")
-    except asyncio.CancelledError:
-        logging.info("Tasks canceled, shutting down gracefully.")
-    # finally:
-    #     # Clean up tasks
-    #     for task in tasks:
-    #         task.cancel()
-
-
-# async def main():
-#     # Load credentials from environment variables
-#     xt_api_key = os.getenv("XT_API_KEY")
-#     xt_secret_key = os.getenv("XT_SECRET_KEY")
-#     kucoin_api_key = os.getenv("KUCOIN_API_KEY")
-#     kucoin_secret_key = os.getenv("KUCOIN_SECRET_KEY")
-#     kucoin_passphrase = os.getenv("KUCOIN_PASSPHRASE")
-
-#     queue = asyncio.Queue()
-
-#     # Start by processing XT, then KuCoin, then alternate
-#     await queue.put('xt')
-
-#     while True:
-#         current_exchange = await queue.get()
-#         print(f"Processing {current_exchange} exchange...") 
-
-#         if current_exchange == 'xt':
-#             # Process XT data and then pass control to KuCoin
-#             # Log before processing XT
-#             logging.info("Processing XT exchange...")
-#             await handle_xt_order_book_data(await authenticate_xt(xt_api_key, xt_secret_key), queue)
-#             print("XT processed, now switching to KuCoin.")
-#             # Add KuCoin to the queue for the next iteration
-#             await queue.put('kucoin')
-
-#         elif current_exchange == 'kucoin':
-#             # Process KuCoin data and then pass control to XT
-#             # Log before processing KuCoin
-#             logging.info("Processing KuCoin exchange...")
-#             await handle_kucoin_order_book_data(await authenticate_kucoin(kucoin_api_key, kucoin_secret_key, kucoin_passphrase), queue)
-#             print("KuCoin processed, now switching to XT.")
-#             # Add XT to the queue for the next iteration
-#             await queue.put('xt')
-
-
-async def main():
-    try:
-        # Load credentials
-        xt_api_key = os.getenv("XT_API_KEY")
-        xt_secret_key = os.getenv("XT_SECRET_KEY")
-        kucoin_api_key = os.getenv("KUCOIN_API_KEY")
-        kucoin_secret_key = os.getenv("KUCOIN_SECRET_KEY")
-        kucoin_passphrase = os.getenv("KUCOIN_PASSPHRASE")
-
-        # Authenticate
-        await authenticate_all(xt_api_key, xt_secret_key, kucoin_api_key, kucoin_secret_key, kucoin_passphrase)
-
-        # Initialize WebSocket clients
-        xt_client = XTWebsocketClient(xt_api_key, xt_secret_key)
-        kucoin_client = KucoinWebSocketClient(kucoin_api_key, kucoin_secret_key, kucoin_passphrase)
-
-        # Start WebSocket handlers
+        # Authenticate both XT and KuCoin concurrently
         await asyncio.gather(
-            handle_xt_client(xt_client),
-            handle_kucoin_client(kucoin_client),
-            detect_arbitrage_opportunity()
+            authenticate_xt(XT_API_KEY, XT_SECRET_KEY),
+            authenticate_kucoin(KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE)
         )
+        logging.info("Both XT and KuCoin authenticated successfully.")
     except Exception as e:
-        logging.error(f"Main function error: {e}")
-        raise
+        logging.error(f"Authentication failed: {e}")
+        raise SystemExit("Exiting program due to failed authentication.")
 
+async def process_xt(queue):
+    logging.info("Processing XT exchange...")
+    await handle_xt_order_book_data(await authenticate_xt(XT_API_KEY, XT_SECRET_KEY), queue)
+    print("XT processed, now switching to KuCoin.")
+    await queue.put('kucoin')  # Add KuCoin to the queue for the next iteration
 
-# Run the main function
-if __name__ == "__main__":
-    asyncio.run(main())
+async def process_kucoin(queue):
+    logging.info("Processing KuCoin exchange...")
+    await handle_kucoin_order_book_data(await authenticate_kucoin(KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE), queue)
+    print("KuCoin processed, now switching to XT.")
+    await queue.put('xt')  # Add XT to the queue for the next iteration
 
+async def main(XT_API_KEY, XT_SECRET_KEY, KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE):
+    queue = asyncio.Queue()
+
+    # Start by processing XT, then KuCoin, and alternate
+    await queue.put('xt')
+
+    # Authenticate both exchanges at the start
+    await authenticate_all(XT_API_KEY, XT_SECRET_KEY, KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE)
+
+    exchange_actions = {
+        'xt': process_xt,
+        'kucoin': process_kucoin,
+    }
+
+    while True:
+        current_exchange = await queue.get()
+        print(f"Processing {current_exchange} exchange...")
+
+        # Call the appropriate function based on the exchange
+        if current_exchange in exchange_actions:
+            await exchange_actions[current_exchange](queue)
+
+# Run the main function with the necessary API keys and secrets
+asyncio.run(main(XT_API_KEY, XT_SECRET_KEY, KUCOIN_API_KEY, KUCOIN_SECRET_KEY, KUCOIN_PASSPHRASE))
