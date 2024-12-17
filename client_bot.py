@@ -112,9 +112,13 @@ CONFIG = {
 # }
 
 # Initialize order books
+# order_books = {
+#     "kucoin": {"bids": [], "asks": []},
+#     "xt": {"bids": [], "asks": []}
+# }
 order_books = {
-    "kucoin": {"bids": [], "asks": []},
-    "xt": {"bids": [], "asks": []}
+    "kucoin": {"bids": [[50000, 1]], "asks": [[50100, 1]]},
+    "xt": {"bids": [[49900, 1]], "asks": [[50200, 1]],}
 }
 
 # Log successful configuration loading
@@ -122,14 +126,14 @@ logging.info("Configuration loaded successfully.")
 logging.debug(f"XT API Key: {XT_API_KEY[:4]}*** (masked for security)")
 logging.debug(f"KuCoin API Key: {KUCOIN_API_KEY[:4]}*** (masked for security)")
 
-# Global order books for XT and KuCoin
-xt_order_book = {
-    "bids": [], 
-    "asks": []
-}
+# Mock data for kucoin and xt order books
 kucoin_order_book = {
-    "bids": [], 
-    "asks": []
+    "bids": [[50000, 1]],  # Example bid price and quantity
+    "asks": [[50100, 1]],  # Example ask price and quantity
+}
+xt_order_book = {
+    "bids": [[49900, 1]],
+    "asks": [[50200, 1]],
 }
 
 
@@ -194,27 +198,28 @@ async def get_user_inputs():
 
 
 # Function for symbol adjustments
-async def adjust_symbol(exchange, symbol, amount):
+def adjust_symbol(exchange, symbol, amount):
     """
     Adjust symbol based on exchange-specific rules.
     """
-    if exchange == "kucoin":
+    if exchange.lower() == "kucoin":
         if symbol == "BTC":
-            symbol = "XBTUSDTM"
+            symbol = symbol.upper() + "-USDT"
         elif symbol in ["BONK"]:
             symbol = "1000" + symbol + "USDTM"
             amount /= 1000
         elif symbol in ["SLP"]:
             return "-", amount
         else:
-            symbol = symbol + "USDTM"
-    elif exchange == "xt":
+            symbol = symbol.upper() + "USDTM"
+    elif exchange.lower() == "xt":
         if symbol in ["PEPE", "BONK", "SHIB", "FLOKI"]:
             symbol = "1000" + symbol.lower() + "_usdt"
             amount /= 1000
         else:
             symbol = symbol.lower() + "_usdt"
     return symbol, amount
+
 
 
 # Function to calculate spread
@@ -253,41 +258,125 @@ async def place_orders(long_exchange, short_exchange, symbol, chunk_size, spread
     await asyncio.sleep(0.1)
 
 
-# Function to execute market order
-async def execute_market_order(exchange, side, amount, symbol):
+# Helper Function to format symbols based on Kucoin and XT's expected symbol format
+def format_symbol(exchange, symbol):
     """
-    Execute market orders when a limit order is filled.
+    Format the trading symbol according to the exchange's requirements.
     """
-    print(f"Executing {side.upper()} market order on {exchange} for {amount} {symbol}")
-    # Simulate order execution (replace with actual API calls)
-    await asyncio.sleep(0.1)
+    if exchange.lower() == "kucoin":
+        return f"{symbol.upper()}-USDT" # Kucoin format
+    elif exchange.lower() == "xt":
+        return f"{symbol.upper()}_USDT" # XT format
+    else:
+        raise ValueError(f"Unsupported exchange: {exchange}")
+    
+
+# Helper Function to format amount for specific decimal precision of
+def format_amount(amount, precision=6):
+    """
+    Format the amount to the required precision for the exchange.
+    """
+    return round(amount, precision)
+
+
+# To execuute market order on both long and short exchange
+async def execute_market_order(
+    exchange,  # "kucoin" or "xt"
+    api_key,
+    api_secret,
+    symbol,
+    side,  # "buy" or "sell"
+    amount,
+    is_quantity=True,  # Whether the amount is in terms of quantity (True) or funds (False)
+    api_passphrase_or_none=None,  # Passphrase for KuCoin, None for XT.com
+):
+    """
+    Executes a market order on the specified exchange.
+    """
+
+    try:
+        # For KuCoin
+        if exchange.lower() == "kucoin":
+            if not api_passphrase_or_none:
+                raise ValueError("KuCoin requires an API passphrase.")
+            
+            return await place_market_order_kucoin(
+                api_key=api_key,
+                api_secret=api_secret,
+                api_passphrase=api_passphrase_or_none,
+                symbol=symbol,
+                side=side.lower(), # KuCoin expects lowercase
+                size=amount if is_quantity else None,
+                funds=None if is_quantity else amount
+            )
+
+        # For XT
+        elif exchange.lower() == "xt":
+            # Adjust side to XT format (uppercase)
+            xt_side = side.upper()
+
+            return await place_market_order_xt(
+                symbol=symbol,
+                amount=amount,
+                side=xt_side,
+                is_quantity=is_quantity
+            )
+
+        else:
+            raise ValueError(f"Exchange {exchange} is not supported.")
+
+    except Exception as e:
+        logging.error(f"Error executing market order: {e}")
+        return {"error": str(e)}
+
 
 
 # Function to manage trading
 async def manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread):
     """
-    Main trading logic.
+    Manage the trading process by executing orders based on conditions.
     """
     remaining_amount = total_amount
+
     while remaining_amount > 0:
-        # Read order books
-        spread_sell, spread_buy = await calculate_spread(order_books, long_exchange, short_exchange)
+        # Calculate the order size for this iteration
+        order_size = min(chunk_size, remaining_amount)
+        logging.info(f"Remaining amount: {remaining_amount}, Order size: {order_size}")
 
-        # Place limit orders
-        await place_orders(long_exchange, short_exchange, symbol, chunk_size, spread)
+        # Example of executing market orders
+        try:
+            # Format symbools before passing them to the execute function
+            long_symbol = format_symbol(long_exchange, symbol)
+            short_symbol = format_symbol(short_exchange, symbol)
+            # Long order
+            await execute_market_order(
+                symbol=long_symbol, 
+                side="buy", 
+                amount=order_size, 
+                exchange=long_exchange,
+                api_key=KUCOIN_API_KEY,
+                api_secret=KUCOIN_SECRET_KEY,
+                api_passphrase_or_none=KUCOIN_PASSPHRASE # Only passed for KuCoin
+            )
 
-        # Simulate checking order statuses
-        filled_amount = Decimal("0.05")  # Mock filled amount
-        remaining_amount -= filled_amount
+            # Short order
+            await execute_market_order(
+                symbol=short_symbol, 
+                side="sell", 
+                amount=order_size, 
+                exchange=short_exchange,
+                api_key=XT_API_KEY,
+                api_secret=XT_SECRET_KEY
+                # No api_passphrase_or_none for XT
+            )
 
-        # Execute market orders based on fills
-        await execute_market_order(long_exchange, "buy", filled_amount, symbol)
-        await execute_market_order(short_exchange, "sell", filled_amount, symbol)
+        except Exception as e:
+            logging.error(f"Error executing market order: {e}")
 
-        print(f"Remaining Amount to Trade: {remaining_amount} {symbol}")
+        # Reduce the remaining amount
+        remaining_amount -= order_size
+    logging.info("Trading completed.")
 
-        # Repeat until total amount is traded
-        await asyncio.sleep(1)
 
 
 # Function to calculate usd value
@@ -1092,48 +1181,117 @@ async def place_limit_order_xt(symbol, price, quantity, side):
 
 
 # Place market order on xt
+# async def place_market_order_xt(symbol, amount, side, is_quantity=True):
+#     """
+#     Places a market order on XT.com.
+#     `is_quantity`: If True, places order using quantity; otherwise, uses quoteQty.
+#     """
+#     endpoint = "https://api.xt.com/v4/order" 
+#     params = {
+#         "symbol": symbol,
+#         "side": side.upper(),  # BUY or SELL
+#         "type": "MARKET",
+#         "timeInForce": "GTC",  # Effective time not needed but included for consistency
+#         "bizType": "SPOT",  # SPOT or LEVER
+#         "clientOrderId": f"order_{int(time.time())}"  # Optional client-generated ID
+#     }
+
+#     # For BUY orders, use quoteQty; for SELL orders, use quantity
+#     if side.upper() == "BUY" and not is_quantity:
+#         params["quoteQty"] = amount  # Order based on the total amount to spend
+#     elif side.upper() == "SELL" and is_quantity:
+#         params["quantity"] = amount  # Order based on the number of units to sell
+#     else:
+#         raise ValueError("Invalid parameters for market order.")
+
+#     # Sign the request
+#     params["api_key"] = XT_API_KEY
+#     params["timestamp"] = str(int(time.time() * 1000))
+#     params["sign"] = generate_xt_signature(params)
+
+#     # Debugging: Print payload
+#     logging.debug(f"XT API Request Payload: {params}")
+
+#     # Submit the order
+#     try:
+#         response = requests.post(endpoint, data=params)
+#         logging.debug(f"XT Raw Response: {response.text}")
+#         response_json = response.json()
+
+#         if response.status_code == 200 and response_json.get("code") == 0:
+#             logging.info(f"XT Market Order Success: {response_json}")
+#             return response_json
+#         else:
+#             logging.error(f"XT Market Order Failed: {response_json}")
+#             return response_json
+#     except Exception as e:
+#         logging.error(f"Error placing XT market order: {e}")
+#         return {"error": str(e)}
+
 async def place_market_order_xt(symbol, amount, side, is_quantity=True):
     """
     Places a market order on XT.com.
-    `is_quantity`: If True, places order using quantity; otherwise, uses quoteQty.
     """
-    endpoint = "https://api.xt.com/v4/order" 
+    endpoint = "https://api.xt.com/v4/order"
     params = {
         "symbol": symbol,
-        "side": side,  # BUY or SELL
+        "side": side.upper(),  # XT expects "BUY" or "SELL"
         "type": "MARKET",
-        "timeInForce": "GTC",  # Effective time not needed but included for consistency
-        "bizType": "SPOT",  # SPOT or LEVER
-        "clientOrderId": f"order_{int(time.time())}"  # Optional client-generated ID
+        "timeInForce": "GTC",
+        "bizType": "SPOT",
+        "clientOrderId": f"order_{int(time.time())}"
     }
 
-    # For BUY orders, use quoteQty; for SELL orders, use quantity
-    if side == "BUY" and not is_quantity:
-        params["quoteQty"] = amount  # Order based on the total amount to spend
-    elif side == "SELL" and is_quantity:
-        params["quantity"] = amount  # Order based on the number of units to sell
+    if side.upper() == "BUY" and not is_quantity:
+        params["quoteQty"] = amount
+    elif side.upper() == "SELL" and is_quantity:
+        params["quantity"] = amount
     else:
         raise ValueError("Invalid parameters for market order.")
 
-    # Sign the request
+    # Add authentication
     params["api_key"] = XT_API_KEY
     params["timestamp"] = str(int(time.time() * 1000))
     params["sign"] = generate_xt_signature(params)
 
-    # Submit the order
-    try:
-        response = requests.post(endpoint, data=params)
-        response_json = response.json()
+    # Debugging: Log payload
+    logging.debug(f"XT API Request Payload: {params}")
 
-        if response.status_code == 200 and response_json.get("code") == 0:
-            logging.info(f"XT Market Order Success: {response_json}")
-            return response_json
-        else:
-            logging.error(f"XT Market Order Failed: {response_json}")
-            return response_json
-    except Exception as e:
-        logging.error(f"Error placing XT market order: {e}")
-        return {"error": str(e)}
+    MAX_RETRIES = 5
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            response = requests.post(endpoint, data=params, headers=headers)
+
+            # Log raw response
+            logging.debug(f"XT Raw Response Status: {response.status_code}")
+            logging.debug(f"XT Raw Response Content: {response.text}")
+
+            if response.status_code != 200:
+                logging.error(f"XT API call failed with status code {response.status_code}")
+                return {"error": f"HTTP {response.status_code}: {response.text}"}
+
+            response_json = response.json()
+
+            if response_json.get("code") == 0:
+                logging.info(f"XT Market Order Success: {response_json}")
+                return response_json
+            else:
+                logging.error(f"XT Market Order Failed: {response_json}")
+                return response_json
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Connection error with XT API: {e}")
+            return {"error": str(e)}
+        except ValueError as e:  # JSON decoding errors
+            logging.error(f"Error parsing XT API response: {e}, Raw Response: {response.text}")
+            return {"error": f"JSON Parsing Error: {response.text}"}
+        except Exception as e:
+            logging.error(f"Error connecting to XT API: {e}")
+            time.sleep(2 ** attempt)
+    else:
+        logging.error("Failed to contact XT API after multiple attempts.")
 
 
 # Cancel all orders on XT.com
@@ -1678,34 +1836,55 @@ async def monitor_order_books():
 
 
 
+# async def main():
+#     """
+#     Main function to initialize and run the trading bot.
+#     """
+#     # Start WebSocket connections (replace with actual implementations)
+#     # websocket_tasks = asyncio.gather(
+#     #     fetch_kucoin_data(),
+#     #     fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
+#     # )
+
+#     # # Wait a short period to allow the order books to populate
+#     # await asyncio.sleep(5)  # Adjust this value based on WebSocket latency
+
+#     # Get user inputs
+#     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
+
+#     # Adjust symbols for both exchanges
+#     symbol, total_amount = await adjust_symbol(long_exchange, symbol, total_amount)
+#     symbol, total_amount = await adjust_symbol(short_exchange, symbol, total_amount)
+
+#     # Manage trading
+#     await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
+
+#     # Ensure WebSocket tasks run concurrently
+#     # await websocket_tasks
+
 async def main():
     """
     Main function to initialize and run the trading bot.
     """
-    # Start WebSocket connections (replace with actual implementations)
-    websocket_tasks = asyncio.gather(
-        fetch_kucoin_data(),
-        fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
-    )
+    # Start WebSocket connections (if necessary)
 
     # Wait a short period to allow the order books to populate
-    await asyncio.sleep(5)  # Adjust this value based on WebSocket latency
+    await asyncio.sleep(5)
 
     # Get user inputs
     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
 
     # Adjust symbols for both exchanges
-    symbol, total_amount = await adjust_symbol(long_exchange, symbol, total_amount)
-    symbol, total_amount = await adjust_symbol(short_exchange, symbol, total_amount)
+    symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
+    symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
 
     # Manage trading
     await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
 
-    # Ensure WebSocket tasks run concurrently
-    await websocket_tasks
-
+    # Ensure WebSocket tasks run concurrently (if applicable)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
+

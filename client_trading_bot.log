@@ -1,30 +1,28 @@
-2024-12-16 18:21:47,034 - INFO - Trading Bot Initialized.
-2024-12-16 18:21:47,040 - INFO - Configuration loaded successfully.
-2024-12-16 18:21:49,168 - INFO - Authenticating XT WebSocket
-2024-12-16 18:21:51,253 - INFO - XT.com subscription sent: {'method': 'subscribe', 'params': ['depth_update@btc_usdt'], 'id': 1, 'timestamp': 1734369711252}
-2024-12-16 18:21:51,255 - INFO - Connected to KuCoin WebSocket: {"id":"4b1f2e17-bb95-4bb7-b8ff-19945c151f73","type":"welcome"}
-2024-12-16 18:21:51,258 - INFO - KuCoin subscription sent: {'id': 1734369711257, 'type': 'subscribe', 'topic': '/market/level2:BTC-USDT', 'response': True}
-2024-12-16 18:21:51,691 - INFO - XT.com message received: {'id': '1', 'code': 0, 'msg': 'SUCCESS', 'method': 'subscribe'}
-2024-12-16 18:21:51,693 - WARNING - XT.com message does not contain valid bids and asks.
-2024-12-16 18:21:52,026 - INFO - XT.com message received: {'topic': 'depth_update', 'event': 'depth_update@btc_usdt', 'data': {'s': 'btc_usdt', 'fi': 1734187191718, 'i': 1734187191733, 'a': [['106864.56', '0.00111'], ['106864.57', '0.00000'], ['106868.19', '0.00000'], ['106868.20', '0.30545'], ['106869.14', '0.00000'], ['106869.45', '0.46076'], ['106870.88', '0.41980'], ['106870.93', '0.00000']], 'b': [['106863.49', '0.00000'], ['106863.48', '0.00025'], ['106863.12', '0.00000'], ['106862.86', '0.05899'], ['106861.64', '0.00000'], ['106861.38', '0.07141'], ['106857.96', '0.14387'], ['106857.84', '0.00000']]}}
-2024-12-16 18:21:52,026 - INFO - XT.com order book updated.
-2024-12-16 18:21:52,027 - INFO - Top 5 Asks: [(106864.56, 0.00111), (106868.2, 0.30545), (106869.45, 0.46076), (106870.88, 0.4198)]
-2024-12-16 18:21:52,027 - INFO - Top 5 Bids: [(106863.48, 0.00025), (106862.86, 0.05899), (106861.38, 0.07141), (106857.96, 0.14387)]
-2024-12-16 18:28:59,463 - ERROR - _GatheringFuture exception was never retrieved
-future: <_GatheringFuture finished exception=CancelledError()>
-Traceback (most recent call last):
-  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/client_bot.py", line 1641, in fetch_xt_data
-    await xt_websocket(api_key, secret_key)  # Assuming this updates order_books["xt"]
-  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/client_bot.py", line 1339, in xt_websocket
-    response = await websocket.recv()
-  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/websockets/asyncio/connection.py", line 294, in recv
-    return await self.recv_messages.get(decode)
-  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/websockets/asyncio/messages.py", line 150, in get
-    frame = await self.frames.get(not self.closed)
-  File "/home/awoyemivictora/clients/seena-houman-arbitrage-bot/venv/lib/python3.10/site-packages/websockets/asyncio/messages.py", line 51, in get
-    await self.get_waiter
-asyncio.exceptions.CancelledError
-
-During handling of the above exception, another exception occurred:
-
-asyncio.exceptions.CancelledError
+2024-12-17 13:00:11,321 - INFO - Trading Bot Initialized.
+2024-12-17 13:00:11,330 - INFO - Configuration loaded successfully.
+2024-12-17 13:00:26,037 - INFO - Remaining amount: 1, Order size: 0.1
+2024-12-17 13:00:30,838 - ERROR - Error placing XT market order: Expecting value: line 1 column 1 (char 0)
+2024-12-17 13:00:30,841 - INFO - Remaining amount: 0.9, Order size: 0.1
+2024-12-17 13:00:35,776 - ERROR - Error placing XT market order: Expecting value: line 1 column 1 (char 0)
+2024-12-17 13:00:35,779 - INFO - Remaining amount: 0.8, Order size: 0.1
+2024-12-17 13:00:41,005 - ERROR - Error placing XT market order: Expecting value: line 1 column 1 (char 0)
+2024-12-17 13:00:41,008 - INFO - Remaining amount: 0.7, Order size: 0.1
+2024-12-17 13:08:13,124 - INFO - Trading Bot Initialized.
+2024-12-17 13:08:13,127 - INFO - Configuration loaded successfully.
+2024-12-17 13:08:28,360 - INFO - Remaining amount: 1, Order size: 0.1
+2024-12-17 13:08:33,498 - ERROR - Error placing XT market order: Expecting value: line 1 column 1 (char 0)
+2024-12-17 13:08:33,500 - INFO - Remaining amount: 0.9, Order size: 0.1
+2024-12-17 13:08:38,054 - ERROR - Error placing XT market order: Expecting value: line 1 column 1 (char 0)
+2024-12-17 13:08:38,057 - INFO - Remaining amount: 0.8, Order size: 0.1
+2024-12-17 13:11:56,525 - INFO - Trading Bot Initialized.
+2024-12-17 13:11:56,531 - INFO - Configuration loaded successfully.
+2024-12-17 13:12:10,044 - INFO - Remaining amount: 1, Order size: 0.1
+2024-12-17 13:12:15,180 - ERROR - XT API call failed with status code 503
+2024-12-17 13:12:15,182 - INFO - Remaining amount: 0.9, Order size: 0.1
+2024-12-17 13:12:20,308 - ERROR - XT API call failed with status code 503
+2024-12-17 13:12:20,309 - INFO - Remaining amount: 0.8, Order size: 0.1
+2024-12-17 13:21:57,480 - INFO - Trading Bot Initialized.
+2024-12-17 13:21:57,486 - INFO - Configuration loaded successfully.
+2024-12-17 13:22:11,851 - INFO - Remaining amount: 1, Order size: 0.1
+2024-12-17 13:22:17,230 - ERROR - XT API call failed with status code 503
+2024-12-17 13:22:17,233 - INFO - Remaining amount: 0.9, Order size: 0.1
