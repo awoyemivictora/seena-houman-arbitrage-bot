@@ -232,7 +232,7 @@ async def calculate_spread(order_books, long_exchange, short_exchange):
     short_best_bid = Decimal(order_books[short_exchange]["bids"][0][0])
     short_best_ask = Decimal(order_books[short_exchange]["asks"][0][0])
 
-    spread_sell = (long_best_ask / short_best_bid) - 1
+    spread_sell = (short_best_ask / long_best_ask) - 1
     spread_buy = (short_best_bid / long_best_bid) - 1
 
     return spread_sell, spread_buy
@@ -253,6 +253,28 @@ async def place_orders(long_exchange, short_exchange, symbol, chunk_size, spread
     # Place limit order to sell on Short exchange
     sell_price = short_best_ask * (1 + spread)
     print(f"Placing SELL order on {short_exchange} at {sell_price} for {chunk_size} {symbol}")
+
+    # Simulate order placement (replace with actual API calls)
+    await asyncio.sleep(0.1)
+
+
+
+# Function to place orders
+async def place_orders(long_exchange, short_exchange, symbol, chunk_size, spread):
+    """
+    Place limit orders on both exchanges.
+    """
+    long_best_ask = Decimal(order_books[long_exchange]["asks"][0][0])
+    short_best_bid = Decimal(order_books[short_exchange]["bids"][0][0])
+
+    # Place limit order to buy on Long exchange
+    buy_price = short_best_bid * (1 - spread)
+    print(f"Placing BUY order on {long_exchange} at {buy_price} for {chunk_size} {symbol}")
+
+    # Place limit order to sell on Short exchange
+    sell_price = long_best_ask * (1 + spread)
+    print(f"Placing SELL order on {short_exchange} at {sell_price} for {chunk_size} {symbol}")
+
 
     # Simulate order placement (replace with actual API calls)
     await asyncio.sleep(0.1)
@@ -1841,13 +1863,13 @@ async def monitor_order_books():
 #     Main function to initialize and run the trading bot.
 #     """
 #     # Start WebSocket connections (replace with actual implementations)
-#     # websocket_tasks = asyncio.gather(
-#     #     fetch_kucoin_data(),
-#     #     fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
-#     # )
+#     websocket_tasks = asyncio.gather(
+#         fetch_kucoin_data(),
+#         fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
+#     )
 
 #     # # Wait a short period to allow the order books to populate
-#     # await asyncio.sleep(5)  # Adjust this value based on WebSocket latency
+#     await asyncio.sleep(5)  # Adjust this value based on WebSocket latency
 
 #     # Get user inputs
 #     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
@@ -1860,31 +1882,120 @@ async def monitor_order_books():
 #     await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
 
 #     # Ensure WebSocket tasks run concurrently
-#     # await websocket_tasks
+  
+
+
+# async def main():
+#     """
+#     Main function to initialize and run the trading bot.
+#     """
+#     # Start WebSocket connections (replace with actual implementations)
+#     websocket_tasks = asyncio.gather(
+#         fetch_kucoin_data(),
+#         fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
+#     )
+#     await websocket_tasks()
+
+#     # Wait a short period to allow the order books to populate
+#     await asyncio.sleep(5)
+
+#     # Get user inputs
+#     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
+
+#     # Adjust symbols for both exchanges
+#     symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
+#     symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
+
+#     # Manage trading
+#     await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
+
+#     # Ensure WebSocket tasks run concurrently (if applicable)
+
+
+# if __name__ == "__main__":
+#     logging.basicConfig(level=logging.INFO)
+#     asyncio.run(main())
+
+
+
+
+
+
+
+import asyncio
+import logging
+from websockets import connect
+
+# async def fetch_kucoin_data():
+#     """
+#     Fetches live market data from KuCoin via WebSocket.
+#     """
+#     kucoin_url = "wss://ws-api.kucoin.com/endpoint"
+#     async with connect(kucoin_url) as websocket:
+#         # Example subscription request (adapt based on KuCoin documentation)
+#         subscribe_request = {
+#             "id": 1,
+#             "type": "subscribe",
+#             "topic": "/market/ticker:BTC-USDT",
+#             "privateChannel": False,
+#             "response": True,
+#         }
+#         await websocket.send(json.dumps(subscribe_request))
+#         while True:
+#             response = await websocket.recv()
+#             logging.info(f"KuCoin Data: {response}")
+#             # Parse and store the data as needed
+
+
+# async def fetch_xt_data(api_key, api_secret):
+#     """
+#     Fetches live market data from XT.com via WebSocket.
+#     """
+#     xt_url = "wss://stream.xt.com/ws"  # Replace with XT.com's actual WebSocket URL
+#     async with connect(xt_url) as websocket:
+#         # Example authentication (adapt based on XT's documentation)
+#         subscribe_request = {
+#             "op": "subscribe",
+#             "args": ["market.btcusdt.ticker"],  # Adjust symbol based on the trading pair
+#         }
+#         await websocket.send(json.dumps(subscribe_request))
+#         while True:
+#             response = await websocket.recv()
+#             logging.info(f"XT Data: {response}")
+#             # Parse and store the data as needed
+
 
 async def main():
     """
     Main function to initialize and run the trading bot.
     """
-    # Start WebSocket connections (if necessary)
+    # Start WebSocket connections
+    websocket_tasks = asyncio.gather(
+        fetch_kucoin_data(),
+        fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
+    )
 
-    # Wait a short period to allow the order books to populate
-    await asyncio.sleep(5)
+    # Run WebSocket tasks concurrently while managing trading
+    try:
+        # Get user inputs
+        long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
 
-    # Get user inputs
-    long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
+        # Adjust symbols for both exchanges
+        symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
+        symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
 
-    # Adjust symbols for both exchanges
-    symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
-    symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
-
-    # Manage trading
-    await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
-
-    # Ensure WebSocket tasks run concurrently (if applicable)
+        # Manage trading (this should not block WebSocket tasks)
+        await asyncio.gather(
+            websocket_tasks,
+            manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
+        )
+    except Exception as e:
+        logging.error(f"Error in main function: {e}")
+    finally:
+        logging.info("Closing WebSocket connections...")
+        websocket_tasks.cancel()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
-
