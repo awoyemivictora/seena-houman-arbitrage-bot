@@ -1,8 +1,18 @@
-2024-12-18 07:54:29,129 - INFO - Trading Bot Initialized.
-2024-12-18 07:54:29,132 - INFO - Configuration loaded successfully.
-2024-12-18 07:54:29,142 - INFO - Testing Limit Order...
-2024-12-18 07:54:30,297 - INFO - Raw Response: {"rc":1,"mc":"AUTH_002","ma":[],"result":null}
-2024-12-18 07:54:30,299 - ERROR - XT Limit Order Failed: {'rc': 1, 'mc': 'AUTH_002', 'ma': [], 'result': None}
-2024-12-18 07:54:30,300 - INFO - Testing Market Order...
-2024-12-18 07:54:31,435 - INFO - Raw Response: {"rc":1,"mc":"AUTH_002","ma":[],"result":null}
-2024-12-18 07:54:31,436 - ERROR - XT Market Order Failed: {'rc': 1, 'mc': 'AUTH_002', 'ma': [], 'result': None}
+2024-12-18 15:25:16,997 - INFO - Trading Bot Initialized.
+2024-12-18 15:25:17,000 - INFO - Configuration loaded successfully.
+2024-12-18 15:52:49,640 - INFO - Trading Bot Initialized.
+2024-12-18 15:52:49,650 - INFO - Configuration loaded successfully.
+2024-12-18 15:59:56,790 - INFO - Trading Bot Initialized.
+2024-12-18 15:59:56,797 - INFO - Configuration loaded successfully.
+2024-12-18 16:02:57,473 - INFO - Trading Bot Initialized.
+2024-12-18 16:02:57,475 - INFO - Configuration loaded successfully.
+2024-12-18 16:09:38,480 - INFO - Trading Bot Initialized.
+2024-12-18 16:09:38,486 - INFO - Configuration loaded successfully.
+2024-12-18 16:12:36,524 - INFO - Trading Bot Initialized.
+2024-12-18 16:12:36,526 - INFO - Configuration loaded successfully.
+2024-12-18 16:20:48,428 - INFO - Trading Bot Initialized.
+2024-12-18 16:20:48,434 - INFO - Configuration loaded successfully.
+2024-12-18 16:22:40,988 - INFO - Trading Bot Initialized.
+2024-12-18 16:22:40,990 - INFO - Configuration loaded successfully.
+2024-12-18 16:27:42,606 - INFO - Trading Bot Initialized.
+2024-12-18 16:27:42,613 - INFO - Configuration loaded successfully.

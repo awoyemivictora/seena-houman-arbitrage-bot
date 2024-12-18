@@ -66,6 +66,7 @@ XT_SECRET_KEY = os.getenv("XT_SECRET_KEY")
 # API Endpoints
 XT_REST_URL = "https://sapi.xt.com/v4/public/depth"
 XT_WS_URL = "wss://stream.xt.com/public"
+XT_BASE_URL = "https://sapi.xt.com"
 
 # Variables for order book synchronization
 lastUpdateId_xt = None
@@ -204,7 +205,7 @@ def adjust_symbol(exchange, symbol, amount):
     """
     if exchange.lower() == "kucoin":
         if symbol == "BTC":
-            symbol = symbol.upper() + "-USDT"
+            symbol ="XBTUSDTM"
         elif symbol in ["BONK"]:
             symbol = "1000" + symbol + "USDTM"
             amount /= 1000
@@ -1069,17 +1070,100 @@ async def subscribe_to_kucoin_level2(symbol): # This function will await process
 
 
 #============= ALL XT.COM INTERACTIONS =============
+# Helper Function: Signature Creation
+def _create_sign(path: str, bodymod: str = None, params: dict = None):
+    apikey = XT_API_KEY
+    secret = XT_SECRET_KEY
+    timestamp = str(int(time.time() * 1000))
+    if bodymod == 'application/json':
+        if params:
+            message = json.dumps(params)
+            signkey = f"xt-validate-appkey={apikey}&xt-validate-timestamp={timestamp}#{path}#{message}"
+        else:
+            signkey = f"xt-validate-appkey={apikey}&xt-validate-timestamp={timestamp}#{path}"
+    else:
+        raise ValueError(f"Unsupported bodymod: {bodymod}")
+
+    digestmodule = hashlib.sha256
+    sign = hmac.new(secret.encode("utf-8"), signkey.encode("utf-8"), digestmod=digestmodule).hexdigest()
+    return {
+        'validate-signversion': "2",
+        'xt-validate-appkey': apikey,
+        'xt-validate-timestamp': timestamp,
+        'xt-validate-signature': sign,
+        'xt-validate-algorithms': "HmacSHA256",
+    }
+
+# Helper Function: Fetch API
+def _fetch(method, url, params=None, body=None, data=None, headers=None, timeout=30, **kwargs):
+    try:
+        if method == "POST":
+            response = requests.post(url, json=data, headers=headers, timeout=timeout)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+
+        response.raise_for_status()
+        return response.status_code, response.json(), None
+    except requests.exceptions.RequestException as e:
+        return None, None, str(e)
+
+
+# Generic Order Function
+def send_order(symbol, amount, order_side, order_type, position_side, price=None,
+               client_order_id=None, time_in_force=None, trigger_profit_price=None,
+               trigger_stop_price=None):
+    """
+    :return: send order
+    """
+    params = {
+        "orderSide": order_side,
+        "orderType": order_type,
+        "origQty": amount,
+        "positionSide": position_side,
+        "symbol": symbol
+    }
+    if price and order_type == "LIMIT":  # Only set price for LIMIT orders
+        params["price"] = price
+    if client_order_id:
+        params["clientOrderId"] = client_order_id
+    if time_in_force and order_type == "LIMIT":  # Only set time_in_force for LIMIT orders
+        params["timeInForce"] = time_in_force
+    if trigger_profit_price:
+        params["triggerProfitPrice"] = trigger_profit_price
+    if trigger_stop_price:
+        params["triggerStopPrice"] = trigger_stop_price
+
+    bodymod = "application/json"
+    path = "/future/trade" + '/v1/order/create'
+    url = "https://fapi.xt.com" + path
+    # params = dict(sorted(params.items(), key=lambda e: e[0]))
+    header = _create_sign(path=path, bodymod=bodymod, params=params)
+    code, success, error = _fetch(method="POST", url=url, headers=header, data=params, timeout=30)
+    return code, success, error
+
+
 # Generating the signature for XT API requests
-def generate_xt_signature(params):
-    """
-    Generate a signature for XT API requests.
-    """
-    query_string = "&".join(f"{key}={value}" for key, value in sorted(params.items()))
+def generate_xt_signature(headers, method, path, query, body, secret_key):
+    # Concatenate method, path, query, and body with '#'
+    query_part = f"#{query}" if query else ""
+    body_part = f"#{body}" if body else ""
+    request_string = f"#{method.upper()}#{path}{query_part}{body_part}"
+
+    # Sort headers alphabetically and concatenate with '&'
+    header_string = "&".join(
+        f"{key}={value}" for key, value in sorted(headers.items())
+    )
+
+    # Combine header string and request string
+    message_to_sign = f"{header_string}{request_string}"
+
+    # Generate HMAC-SHA256 signature
     signature = hmac.new(
-        XT_SECRET_KEY.encode('utf-8'),
-        query_string.encode('utf-8'),
+        secret_key.encode("utf-8"),
+        message_to_sign.encode("utf-8"),
         hashlib.sha256
     ).hexdigest()
+
     return signature
 
 
@@ -1166,98 +1250,251 @@ def process_xt_order_update(message):
 
 
 # Place limit order on XT.com   
-async def place_limit_order_xt(symbol, price, quantity, side):
-    """
-    Places a limit order on XT.com.
-    """
-    endpoint = "https://sapi.xt.com/v4/order"
-    params = {
+# async def place_limit_order_xt(symbol, price, quantity, side):
+#     """
+#     Places a limit order on XT.com.
+#     """
+#     endpoint = "https://sapi.xt.com/v4/order"
+#     timestamp = str(int(time.time() * 1000))  # Current Unix timestamp in milliseconds
+#     params = {
+#         "symbol": symbol,
+#         "side": side,  # BUY or SELL
+#         "type": "LIMIT",
+#         "timeInForce": "GTC",  # Good Till Canceled
+#         "bizType": "SPOT",  # SPOT or LEVER
+#         "price": price,
+#         "quantity": quantity,
+#         "recvWindow": 5000,  # 5-second tolerance
+#         "timestamp": timestamp,
+#     }
+
+#     # Log parameters before signing
+#     logging.debug(f"Request Parameters (before signing): {params}")
+
+#     # Generate signature
+#     params["sign"] = generate_xt_signature(params, XT_SECRET_KEY)
+
+#     # Log parameters after signing
+#     logging.debug(f"Request Parameters (after signing): {params}")
+
+#     # Headers with additional required validation headers
+#     headers = {
+#         "X-API-KEY": XT_API_KEY, 
+#         "validate-appkey": XT_API_KEY, 
+#         "validate-recvwindow": str(params["recvWindow"]),  
+#         "validate-signature": params["sign"], 
+#         "validate-timestamp": timestamp,  
+#         "validate-algorithms": "HmacSHA256", 
+#     }
+
+#     try:
+#         response = requests.post(endpoint, data=params, headers=headers)
+#         print(response.text)
+#         response_json = response.json()
+
+#         logging.info(f"Raw Response: {response.text}")
+
+#         if response.status_code == 200 and response_json.get("rc") == 0:
+#             logging.info(f"XT Limit Order Success: {response_json}")
+#             return response_json
+#         else:
+#             logging.error(f"XT Limit Order Failed: {response_json}")
+#             return response_json
+#     except Exception as e:
+#         logging.error(f"Error placing XT limit order: {e}")
+#         return {"error": str(e)}
+
+# def place_limit_order_xt(symbol, side, price, quantity):
+#     """
+#     Place a limit order on XT.com.
+#     :param symbol: Trading pair symbol (e.g., "btc_usdt").
+#     :param side: "BUY" or "SELL".
+#     :param price: Price at which to place the order.
+#     :param quantity: Quantity to trade.
+#     :return: JSON response from XT.com API.
+#     """
+#     method = "POST"
+#     path = "/v4/order"
+#     query = ""  # No query parameters
+#     body = json.dumps({
+#         "symbol": symbol,
+#         "side": side.upper(),
+#         "type": "LIMIT",
+#         "timeInForce": "GTC",
+#         "bizType": "SPOT",
+#         "price": str(price),
+#         "quantity": str(quantity)
+#     })
+
+#     # Header values
+#     headers = {
+#         "validate-algorithms": "HmacSHA256",
+#         "validate-appkey": XT_API_KEY,
+#         "validate-recvwindow": "5000",
+#         "validate-timestamp": str(int(time.time() * 1000)),
+#         "Content-Type": "application/json"  # Correct Content-Type
+#     }
+
+#     # Generate the signature
+#     headers["validate-signature"] = generate_xt_signature(
+#         headers=headers,
+#         method=method,
+#         path=path,
+#         query=query,
+#         body=body,
+#         secret_key=XT_SECRET_KEY
+#     )
+
+#     # Send the request
+#     url = f"{XT_BASE_URL}{path}"
+#     response = requests.post(url, headers=headers, data=body)
+
+#     # Log and return response
+#     print("Raw Response:", response.text)
+#     return response.json()
+
+# Function to place a limit order
+def place_limit_order_xt(symbol, side, price, quantity):
+    method = "POST"
+    path = "/v4/order"
+    query = ""  # No query parameters for this request
+    body = json.dumps({
         "symbol": symbol,
-        "side": side,  # BUY or SELL
+        "side": side.upper(),
         "type": "LIMIT",
-        "timeInForce": "GTC",  # Good Till Canceled
-        "bizType": "SPOT",  # SPOT or LEVER
-        "price": price,
-        "quantity": quantity,
-        "recvWindow": 5000,  # 5-second tolerance
-        "timestamp": str(int(time.time() * 1000)),
-    }
+        "timeInForce": "GTC",
+        "bizType": "SPOT",
+        "price": str(price),
+        "quantity": str(quantity)
+    })
 
-    # Generate signature
-    params["sign"] = generate_xt_signature(params)
-
-    # Headers with additional required validation headers
+    # Prepare headers
+    timestamp = str(int(time.time() * 1000))
     headers = {
-        "X-API-KEY": XT_API_KEY,  # Add your API key here
-        "validate-appkey": XT_API_KEY,  # Add your app key if required by XT
-        "validate-recvwindow": str(params["recvWindow"]),  # Add the recvWindow as a header
-        "validate-signature": params["sign"],  # Add the signature header
+        "validate-algorithms": "HmacSHA256",
+        "validate-appkey": XT_API_KEY,
+        "validate-recvwindow": "5000",
+        "validate-timestamp": timestamp,
     }
 
-    try:
-        response = requests.post(endpoint, data=params, headers=headers)
-        response_json = response.json()
+    # Generate the signature
+    signature = generate_xt_signature(
+        headers=headers,
+        method=method,
+        path=path,
+        query=query,
+        body=body,
+        secret_key=XT_SECRET_KEY
+    )
+    headers["validate-signature"] = signature
+    headers["Content-Type"] = "application/json"  # Add Content-Type separately
 
-        logging.info(f"Raw Response: {response.text}")
+    # Send the request
+    url = f"{XT_BASE_URL}{path}"
+    response = requests.post(url, headers=headers, data=body)
 
-        if response.status_code == 200 and response_json.get("rc") == 0:
-            logging.info(f"XT Limit Order Success: {response_json}")
-            return response_json
-        else:
-            logging.error(f"XT Limit Order Failed: {response_json}")
-            return response_json
-    except Exception as e:
-        logging.error(f"Error placing XT limit order: {e}")
-        return {"error": str(e)}
+    # Log response
+    print("Raw Response:", response.text)
+    return response.json()
 
 
 
 # Place market order on xt
-async def place_market_order_xt(symbol, amount, side):
+# async def place_market_order_xt(symbol, amount, side):
+#     """
+#     Places a market order on XT.com.
+#     """
+#     endpoint = "https://sapi.xt.com/v4/order"
+#     timestamp = str(int(time.time() * 1000))  # Current Unix timestamp in milliseconds
+#     params = {
+#         "symbol": symbol,
+#         "side": side,  # BUY or SELL
+#         "type": "MARKET",
+#         "bizType": "SPOT",
+#         "recvWindow": 5000,  # 5-second tolerance
+#         "timestamp": timestamp,
+#     }
+
+#     if side == "BUY":
+#         params["quoteQty"] = amount  # Total in quote currency (e.g., USDT)
+#     else:
+#         params["quantity"] = amount  # Total in base currency (e.g., BTC)
+
+#     # Generate signature
+#     params["sign"] = generate_xt_signature(params, XT_SECRET_KEY)
+
+#     # Headers with additional required validation headers
+#     headers = {
+#         "X-API-KEY": XT_API_KEY, 
+#         "validate-appkey": XT_API_KEY, 
+#         "validate-recvwindow": str(params["recvWindow"]),
+#         "validate-signature": params["sign"], 
+#         "validate-timestamp": timestamp,  
+#         "validate-algorithms": "HmacSHA256", 
+#     }
+
+#     try:
+#         response = requests.post(endpoint, data=params, headers=headers)
+#         response_json = response.json()
+
+#         logging.info(f"Raw Response: {response.text}")
+
+#         if response.status_code == 200 and response_json.get("rc") == 0:
+#             logging.info(f"XT Market Order Success: {response_json}")
+#             return response_json
+#         else:
+#             logging.error(f"XT Market Order Failed: {response_json}")
+#             return response_json
+#     except Exception as e:
+#         logging.error(f"Error placing XT market order: {e}")
+#         return {"error": str(e)}
+
+def place_market_order_xt(symbol, side, quantity):
     """
-    Places a market order on XT.com.
+    Place a market order on XT.com.
+    :param symbol: Trading pair symbol (e.g., "btc_usdt").
+    :param side: "BUY" or "SELL".
+    :param quantity: Quantity to trade.
+    :return: JSON response from XT.com API.
     """
-    endpoint = "https://sapi.xt.com/v4/order"
-    params = {
+    method = "POST"
+    path = "/v4/order"
+    query = ""  # No query parameters
+    body = json.dumps({
         "symbol": symbol,
-        "side": side,  # BUY or SELL
+        "side": side.upper(),
         "type": "MARKET",
         "bizType": "SPOT",
-        "recvWindow": 5000,  # 5-second tolerance
-        "timestamp": str(int(time.time() * 1000)),
-    }
+        "quantity": str(quantity)
+    })
 
-    if side == "BUY":
-        params["quoteQty"] = amount  # Total in quote currency (e.g., USDT)
-    else:
-        params["quantity"] = amount  # Total in base currency (e.g., BTC)
-
-    # Generate signature
-    params["sign"] = generate_xt_signature(params)
-
-    # Headers with additional required validation headers
+    # Header values
     headers = {
-        "X-API-KEY": XT_API_KEY,  # Add your API key here
-        "validate-appkey": XT_API_KEY,  # Add your app key if required by XT
-        "validate-recvwindow": str(params["recvWindow"]),  # Add the recvWindow as a header
-        "validate-signature": params["sign"],  # Add the signature header
+        "validate-algorithms": "HmacSHA256",
+        "validate-appkey": XT_API_KEY,
+        "validate-recvwindow": "5000",
+        "validate-timestamp": str(int(time.time() * 1000)),
+        "Content-Type": "application/json"  # Correct Content-Type
     }
 
-    try:
-        response = requests.post(endpoint, data=params, headers=headers)
-        response_json = response.json()
+    # Generate the signature
+    headers["validate-signature"] = generate_xt_signature(
+        headers=headers,
+        method=method,
+        path=path,
+        query=query,
+        body=body,
+        secret_key=XT_SECRET_KEY
+    )
 
-        logging.info(f"Raw Response: {response.text}")
+    # Send the request
+    url = f"{XT_BASE_URL}{path}"
+    response = requests.post(url, headers=headers, data=body)
 
-        if response.status_code == 200 and response_json.get("rc") == 0:
-            logging.info(f"XT Market Order Success: {response_json}")
-            return response_json
-        else:
-            logging.error(f"XT Market Order Failed: {response_json}")
-            return response_json
-    except Exception as e:
-        logging.error(f"Error placing XT market order: {e}")
-        return {"error": str(e)}
+    # Log and return response
+    print("Raw Response:", response.text)
+    return response.json()
+
 
 
 # Cancel all orders on XT.com
@@ -1701,40 +1938,57 @@ async def trade_loop():
 
 #============== xt.com endpoint functions testing =====
 if __name__ == "__main__":
-    import logging
-    import asyncio
+    # Place Limit Order
+    def place_limit_order(symbol, amount, price):
+        return send_order(
+            symbol=symbol,
+            amount=amount,
+            order_side="BUY",
+            order_type="LIMIT",
+            position_side="LONG",
+            price=price,
+            client_order_id="limitOrder123",
+            time_in_force="GTC"  # Good Till Cancelled
+        )
 
-    # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    # Place Market Order
+    def place_market_order(symbol, amount):
+        return send_order(
+            symbol=symbol,
+            amount=amount,
+            order_side="BUY",
+            order_type="MARKET",
+            position_side="LONG",
+            client_order_id="marketOrder123"
+        )
+    
+    # Example Usage
+    try:
+        # Example for Limit Order
+        limit_order_result = place_limit_order(symbol="ada_usdt", amount=1, price=0.99)
+        print("Limit Order Result:", limit_order_result)
 
-    async def test_orders():
-        # Test limit order
-        logging.info("Testing Limit Order...")
-        try:
-            limit_order_response = await place_limit_order_xt(
-                symbol="BTC-USDT",
-                price=100000,  # Test price
-                quantity=0.001,  # Test quantity
-                side="BUY"
-            )
-            print("Limit Order Response:", limit_order_response)
-        except Exception as e:
-            logging.error(f"Error testing limit order: {e}")
+        # Example for Market Order
+        market_order_result = place_market_order(symbol="ada_usdt", amount=1)
+        print("Market Order Result:", market_order_result)
+    except Exception as e:
+        print("Error placing order:", e)
 
-        # Test market order
-        logging.info("Testing Market Order...")
-        try:
-            market_order_response = await place_market_order_xt(
-                symbol="BTC-USDT",
-                amount=10,  # For BUY, use quote currency total (e.g., 10 USDT)
-                side="BUY"  # BUY or SELL
-            )
-            print("Market Order Response:", market_order_response)
-        except Exception as e:
-            logging.error(f"Error testing market order: {e}")
-
-    # Run the test
-    asyncio.run(test_orders())
+    
+# Example for placing a limit order:
+# try:
+#     result = send_order(
+#         symbol="ada_usdt",          # Trading pair
+#         amount=1,                # Order quantity
+#         order_side="BUY",           # Order side: BUY or SELL
+#         order_type="LIMIT",         # Order type: LIMIT or MARKET
+#         position_side="LONG",       # Position side: LONG or SHORT
+#         price=0.99,                 # Limit price
+#         client_order_id="myOrder1"  # Optional: Client order ID
+#     )
+#     print("Order Result:", result)
+# except Exception as e:
+#     print("Error placing order:", e)
 
 
 #**** Testing Multiple order cancellation on xt
