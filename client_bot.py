@@ -1083,6 +1083,7 @@ def generate_xt_signature(params):
     return signature
 
 
+
 # For Authenticating & Connecting to XT.com Private Websocket
 async def authenticate_xt_websocket():
     """
@@ -1164,12 +1165,12 @@ def process_xt_order_update(message):
         # Additional processing (e.g., updating local state or database)
 
 
-# Place limit order on XT.com        
+# Place limit order on XT.com   
 async def place_limit_order_xt(symbol, price, quantity, side):
     """
-    Places a limit order on XT.com
+    Places a limit order on XT.com.
     """
-    endpoint = "https://api.xt.com/v4/order" 
+    endpoint = "https://sapi.xt.com/v4/order"
     params = {
         "symbol": symbol,
         "side": side,  # BUY or SELL
@@ -1178,20 +1179,28 @@ async def place_limit_order_xt(symbol, price, quantity, side):
         "bizType": "SPOT",  # SPOT or LEVER
         "price": price,
         "quantity": quantity,
-        "clientOrderId": f"order_{int(time.time())}"  # Optional client-generated ID (Unique identifiier for tracking each orders sent to xt.com)
+        "recvWindow": 5000,  # 5-second tolerance
+        "timestamp": str(int(time.time() * 1000)),
     }
 
-    # Sign the request
-    params["api_key"] = XT_API_KEY
-    params["timestamp"] = str(int(time.time() * 1000))
-    params["sign"] = generate_xt_signature(params)  # Assuming generate_signature exists
+    # Generate signature
+    params["sign"] = generate_xt_signature(params)
 
-    # Submit the order
+    # Headers with additional required validation headers
+    headers = {
+        "X-API-KEY": XT_API_KEY,  # Add your API key here
+        "validate-appkey": XT_API_KEY,  # Add your app key if required by XT
+        "validate-recvwindow": str(params["recvWindow"]),  # Add the recvWindow as a header
+        "validate-signature": params["sign"],  # Add the signature header
+    }
+
     try:
-        response = requests.post(endpoint, data=params)
+        response = requests.post(endpoint, data=params, headers=headers)
         response_json = response.json()
 
-        if response.status_code == 200 and response_json.get("code") == 0:
+        logging.info(f"Raw Response: {response.text}")
+
+        if response.status_code == 200 and response_json.get("rc") == 0:
             logging.info(f"XT Limit Order Success: {response_json}")
             return response_json
         else:
@@ -1202,118 +1211,53 @@ async def place_limit_order_xt(symbol, price, quantity, side):
         return {"error": str(e)}
 
 
+
 # Place market order on xt
-# async def place_market_order_xt(symbol, amount, side, is_quantity=True):
-#     """
-#     Places a market order on XT.com.
-#     `is_quantity`: If True, places order using quantity; otherwise, uses quoteQty.
-#     """
-#     endpoint = "https://api.xt.com/v4/order" 
-#     params = {
-#         "symbol": symbol,
-#         "side": side.upper(),  # BUY or SELL
-#         "type": "MARKET",
-#         "timeInForce": "GTC",  # Effective time not needed but included for consistency
-#         "bizType": "SPOT",  # SPOT or LEVER
-#         "clientOrderId": f"order_{int(time.time())}"  # Optional client-generated ID
-#     }
-
-#     # For BUY orders, use quoteQty; for SELL orders, use quantity
-#     if side.upper() == "BUY" and not is_quantity:
-#         params["quoteQty"] = amount  # Order based on the total amount to spend
-#     elif side.upper() == "SELL" and is_quantity:
-#         params["quantity"] = amount  # Order based on the number of units to sell
-#     else:
-#         raise ValueError("Invalid parameters for market order.")
-
-#     # Sign the request
-#     params["api_key"] = XT_API_KEY
-#     params["timestamp"] = str(int(time.time() * 1000))
-#     params["sign"] = generate_xt_signature(params)
-
-#     # Debugging: Print payload
-#     logging.debug(f"XT API Request Payload: {params}")
-
-#     # Submit the order
-#     try:
-#         response = requests.post(endpoint, data=params)
-#         logging.debug(f"XT Raw Response: {response.text}")
-#         response_json = response.json()
-
-#         if response.status_code == 200 and response_json.get("code") == 0:
-#             logging.info(f"XT Market Order Success: {response_json}")
-#             return response_json
-#         else:
-#             logging.error(f"XT Market Order Failed: {response_json}")
-#             return response_json
-#     except Exception as e:
-#         logging.error(f"Error placing XT market order: {e}")
-#         return {"error": str(e)}
-
-async def place_market_order_xt(symbol, amount, side, is_quantity=True):
+async def place_market_order_xt(symbol, amount, side):
     """
     Places a market order on XT.com.
     """
-    endpoint = "https://api.xt.com/v4/order"
+    endpoint = "https://sapi.xt.com/v4/order"
     params = {
         "symbol": symbol,
-        "side": side.upper(),  # XT expects "BUY" or "SELL"
+        "side": side,  # BUY or SELL
         "type": "MARKET",
-        "timeInForce": "GTC",
         "bizType": "SPOT",
-        "clientOrderId": f"order_{int(time.time())}"
+        "recvWindow": 5000,  # 5-second tolerance
+        "timestamp": str(int(time.time() * 1000)),
     }
 
-    if side.upper() == "BUY" and not is_quantity:
-        params["quoteQty"] = amount
-    elif side.upper() == "SELL" and is_quantity:
-        params["quantity"] = amount
+    if side == "BUY":
+        params["quoteQty"] = amount  # Total in quote currency (e.g., USDT)
     else:
-        raise ValueError("Invalid parameters for market order.")
+        params["quantity"] = amount  # Total in base currency (e.g., BTC)
 
-    # Add authentication
-    params["api_key"] = XT_API_KEY
-    params["timestamp"] = str(int(time.time() * 1000))
+    # Generate signature
     params["sign"] = generate_xt_signature(params)
 
-    # Debugging: Log payload
-    logging.debug(f"XT API Request Payload: {params}")
+    # Headers with additional required validation headers
+    headers = {
+        "X-API-KEY": XT_API_KEY,  # Add your API key here
+        "validate-appkey": XT_API_KEY,  # Add your app key if required by XT
+        "validate-recvwindow": str(params["recvWindow"]),  # Add the recvWindow as a header
+        "validate-signature": params["sign"],  # Add the signature header
+    }
 
-    MAX_RETRIES = 5
+    try:
+        response = requests.post(endpoint, data=params, headers=headers)
+        response_json = response.json()
 
-    for attempt in range(MAX_RETRIES):
-        try:
-            headers = {"Content-Type": "application/x-www-form-urlencoded"}
-            response = requests.post(endpoint, data=params, headers=headers)
+        logging.info(f"Raw Response: {response.text}")
 
-            # Log raw response
-            logging.debug(f"XT Raw Response Status: {response.status_code}")
-            logging.debug(f"XT Raw Response Content: {response.text}")
-
-            if response.status_code != 200:
-                logging.error(f"XT API call failed with status code {response.status_code}")
-                return {"error": f"HTTP {response.status_code}: {response.text}"}
-
-            response_json = response.json()
-
-            if response_json.get("code") == 0:
-                logging.info(f"XT Market Order Success: {response_json}")
-                return response_json
-            else:
-                logging.error(f"XT Market Order Failed: {response_json}")
-                return response_json
-
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Connection error with XT API: {e}")
-            return {"error": str(e)}
-        except ValueError as e:  # JSON decoding errors
-            logging.error(f"Error parsing XT API response: {e}, Raw Response: {response.text}")
-            return {"error": f"JSON Parsing Error: {response.text}"}
-        except Exception as e:
-            logging.error(f"Error connecting to XT API: {e}")
-            time.sleep(2 ** attempt)
-    else:
-        logging.error("Failed to contact XT API after multiple attempts.")
+        if response.status_code == 200 and response_json.get("rc") == 0:
+            logging.info(f"XT Market Order Success: {response_json}")
+            return response_json
+        else:
+            logging.error(f"XT Market Order Failed: {response_json}")
+            return response_json
+    except Exception as e:
+        logging.error(f"Error placing XT market order: {e}")
+        return {"error": str(e)}
 
 
 # Cancel all orders on XT.com
@@ -1756,26 +1700,41 @@ async def trade_loop():
 
 
 #============== xt.com endpoint functions testing =====
-# if __name__ == "__main__":
-#     XT_API_KEY = os.getenv("XT_API_KEY")
-#     XT_SECRET_KEY = os.getenv("XT_SECRET_KEY")
+if __name__ == "__main__":
+    import logging
+    import asyncio
 
-#     # Place a limit order
-#     limit_order_response = asyncio.run(place_limit_order_xt(
-#         symbol="BTC-USDT",
-#         price="100000",
-#         quantity="0.001",
-#         side="BUY"
-#     ))
-#     print("Limit Order Response:", limit_order_response)
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
 
-#     # Place a market order
-#     market_order_response = asyncio.run(place_market_order_xt(
-#         symbol="BTC-USDT",
-#         amount="0.001",
-#         side="BUY"
-#     ))
-#     print("Market Order Response:", market_order_response)
+    async def test_orders():
+        # Test limit order
+        logging.info("Testing Limit Order...")
+        try:
+            limit_order_response = await place_limit_order_xt(
+                symbol="BTC-USDT",
+                price=100000,  # Test price
+                quantity=0.001,  # Test quantity
+                side="BUY"
+            )
+            print("Limit Order Response:", limit_order_response)
+        except Exception as e:
+            logging.error(f"Error testing limit order: {e}")
+
+        # Test market order
+        logging.info("Testing Market Order...")
+        try:
+            market_order_response = await place_market_order_xt(
+                symbol="BTC-USDT",
+                amount=10,  # For BUY, use quote currency total (e.g., 10 USDT)
+                side="BUY"  # BUY or SELL
+            )
+            print("Market Order Response:", market_order_response)
+        except Exception as e:
+            logging.error(f"Error testing market order: {e}")
+
+    # Run the test
+    asyncio.run(test_orders())
 
 
 #**** Testing Multiple order cancellation on xt
@@ -1832,6 +1791,7 @@ async def monitor_order_books():
         logging.info(f"XT Order Book: {order_books['xt']}")
         await asyncio.sleep(2)  # Log every 5 seconds
 
+
 # async def main():
 #     """
 #     Main function to run both tasks concurrently.
@@ -1856,146 +1816,37 @@ async def monitor_order_books():
 
 
 
-
-
 # async def main():
 #     """
 #     Main function to initialize and run the trading bot.
 #     """
-#     # Start WebSocket connections (replace with actual implementations)
+#     # Start WebSocket connections
 #     websocket_tasks = asyncio.gather(
 #         fetch_kucoin_data(),
 #         fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
 #     )
 
-#     # # Wait a short period to allow the order books to populate
-#     await asyncio.sleep(5)  # Adjust this value based on WebSocket latency
+#     # Run WebSocket tasks concurrently while managing trading
+#     try:
+#         # Get user inputs
+#         long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
 
-#     # Get user inputs
-#     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
+#         # Adjust symbols for both exchanges
+#         symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
+#         symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
 
-#     # Adjust symbols for both exchanges
-#     symbol, total_amount = await adjust_symbol(long_exchange, symbol, total_amount)
-#     symbol, total_amount = await adjust_symbol(short_exchange, symbol, total_amount)
-
-#     # Manage trading
-#     await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
-
-#     # Ensure WebSocket tasks run concurrently
-  
-
-
-# async def main():
-#     """
-#     Main function to initialize and run the trading bot.
-#     """
-#     # Start WebSocket connections (replace with actual implementations)
-#     websocket_tasks = asyncio.gather(
-#         fetch_kucoin_data(),
-#         fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
-#     )
-#     await websocket_tasks()
-
-#     # Wait a short period to allow the order books to populate
-#     await asyncio.sleep(5)
-
-#     # Get user inputs
-#     long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
-
-#     # Adjust symbols for both exchanges
-#     symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
-#     symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
-
-#     # Manage trading
-#     await manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
-
-#     # Ensure WebSocket tasks run concurrently (if applicable)
+#         # Manage trading (this should not block WebSocket tasks)
+#         await asyncio.gather(
+#             websocket_tasks,
+#             manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
+#         )
+#     except Exception as e:
+#         logging.error(f"Error in main function: {e}")
+#     finally:
+#         logging.info("Closing WebSocket connections...")
+#         websocket_tasks.cancel()
 
 
 # if __name__ == "__main__":
 #     logging.basicConfig(level=logging.INFO)
 #     asyncio.run(main())
-
-
-
-
-
-
-
-import asyncio
-import logging
-from websockets import connect
-
-# async def fetch_kucoin_data():
-#     """
-#     Fetches live market data from KuCoin via WebSocket.
-#     """
-#     kucoin_url = "wss://ws-api.kucoin.com/endpoint"
-#     async with connect(kucoin_url) as websocket:
-#         # Example subscription request (adapt based on KuCoin documentation)
-#         subscribe_request = {
-#             "id": 1,
-#             "type": "subscribe",
-#             "topic": "/market/ticker:BTC-USDT",
-#             "privateChannel": False,
-#             "response": True,
-#         }
-#         await websocket.send(json.dumps(subscribe_request))
-#         while True:
-#             response = await websocket.recv()
-#             logging.info(f"KuCoin Data: {response}")
-#             # Parse and store the data as needed
-
-
-# async def fetch_xt_data(api_key, api_secret):
-#     """
-#     Fetches live market data from XT.com via WebSocket.
-#     """
-#     xt_url = "wss://stream.xt.com/ws"  # Replace with XT.com's actual WebSocket URL
-#     async with connect(xt_url) as websocket:
-#         # Example authentication (adapt based on XT's documentation)
-#         subscribe_request = {
-#             "op": "subscribe",
-#             "args": ["market.btcusdt.ticker"],  # Adjust symbol based on the trading pair
-#         }
-#         await websocket.send(json.dumps(subscribe_request))
-#         while True:
-#             response = await websocket.recv()
-#             logging.info(f"XT Data: {response}")
-#             # Parse and store the data as needed
-
-
-async def main():
-    """
-    Main function to initialize and run the trading bot.
-    """
-    # Start WebSocket connections
-    websocket_tasks = asyncio.gather(
-        fetch_kucoin_data(),
-        fetch_xt_data(XT_API_KEY, XT_SECRET_KEY),
-    )
-
-    # Run WebSocket tasks concurrently while managing trading
-    try:
-        # Get user inputs
-        long_exchange, short_exchange, symbol, total_amount, chunk_size, spread = await get_user_inputs()
-
-        # Adjust symbols for both exchanges
-        symbol, total_amount = adjust_symbol(long_exchange, symbol, total_amount)
-        symbol, total_amount = adjust_symbol(short_exchange, symbol, total_amount)
-
-        # Manage trading (this should not block WebSocket tasks)
-        await asyncio.gather(
-            websocket_tasks,
-            manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread)
-        )
-    except Exception as e:
-        logging.error(f"Error in main function: {e}")
-    finally:
-        logging.info("Closing WebSocket connections...")
-        websocket_tasks.cancel()
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())
