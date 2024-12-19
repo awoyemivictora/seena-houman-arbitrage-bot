@@ -10,3 +10,88 @@ The bot will:
 2. Dynamically adjust the symbol based on exchange-specific rules.
 3. Continuously read order books via WebSockets, compute spreads, and manage trades.
 4. Maintain balance equality between exchanges and track completed trades.
+
+
+
+# Function to get user inputs
+async def get_user_inputs()
+
+# Function for symbol adjustments
+def adjust_symbol(exchange, symbol, amount)
+
+# Function to calculate spread
+async def calculate_spread(order_books, long_exchange, short_exchange):
+
+# Function to place orders
+async def place_orders(long_exchange, short_exchange, symbol, chunk_size, spread):
+
+async def execute_market_order(
+    exchange,  # "kucoin" or "xt"
+    api_key,
+    api_secret,
+    symbol,
+    side,  # "buy" or "sell"
+    amount,
+    is_quantity=True,  # Whether the amount is in terms of quantity (True) or funds (False)
+    api_passphrase_or_none=None,  # Passphrase for KuCoin, None for XT.com
+):
+
+# Function to manage trading
+async def manage_trading(long_exchange, short_exchange, symbol, total_amount, chunk_size, spread):
+
+# Function to calculate usd value
+async def calculate_usd_value(symbol, exchange, amount):
+
+# Function to place a limit order on kucoin
+async def place_limit_order_kucoin(api_key, api_secret, api_passphrase, symbol, side, price, size, time_in_force="GTC"):
+
+# Function to place a market order on kucoin
+async def place_market_order_kucoin(api_key, api_secret, api_passphrase, symbol, side, size=None, funds=None):
+
+# Function to place multiple orders on KuCoin
+def place_multiple_orders_kucoin(api_key, api_secret, api_passphrase, symbol, order_list):
+
+#******* For Getting KuCoin's Market Updates ****************
+async def process_kucoin_level2_updates(message):
+
+# Generic Order Function
+def send_order(symbol, amount, order_side, order_type, position_side, price=None,
+               client_order_id=None, time_in_force=None, trigger_profit_price=None,
+               trigger_stop_price=None): and I used it like this: if __name__ == "__main__":
+    # Place Limit Order
+    def place_limit_order(symbol, amount, price):
+        return send_order(
+            symbol=symbol,
+            amount=amount,
+            order_side="BUY",
+            order_type="LIMIT",
+            position_side="LONG",
+            price=price,
+            client_order_id="limitOrder123",
+            time_in_force="GTC"  # Good Till Cancelled
+        )
+
+    # Place Market Order
+    def place_market_order(symbol, amount):
+        return send_order(
+            symbol=symbol,
+            amount=amount,
+            order_side="BUY",
+            order_type="MARKET",
+            position_side="LONG",
+            client_order_id="marketOrder123"
+        )
+    
+    # Example Usage
+    try:
+        # Example for Limit Order
+        limit_order_result = place_limit_order(symbol="ada_usdt", amount=1, price=0.99)
+        print("Limit Order Result:", limit_order_result)
+
+        # Example for Market Order
+        market_order_result = place_market_order(symbol="ada_usdt", amount=1)
+        print("Market Order Result:", market_order_result)
+    except Exception as e:
+        print("Error placing order:", e)
+
+ 

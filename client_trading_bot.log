@@ -1,18 +1,69 @@
-2024-12-18 15:25:16,997 - INFO - Trading Bot Initialized.
-2024-12-18 15:25:17,000 - INFO - Configuration loaded successfully.
-2024-12-18 15:52:49,640 - INFO - Trading Bot Initialized.
-2024-12-18 15:52:49,650 - INFO - Configuration loaded successfully.
-2024-12-18 15:59:56,790 - INFO - Trading Bot Initialized.
-2024-12-18 15:59:56,797 - INFO - Configuration loaded successfully.
-2024-12-18 16:02:57,473 - INFO - Trading Bot Initialized.
-2024-12-18 16:02:57,475 - INFO - Configuration loaded successfully.
-2024-12-18 16:09:38,480 - INFO - Trading Bot Initialized.
-2024-12-18 16:09:38,486 - INFO - Configuration loaded successfully.
-2024-12-18 16:12:36,524 - INFO - Trading Bot Initialized.
-2024-12-18 16:12:36,526 - INFO - Configuration loaded successfully.
-2024-12-18 16:20:48,428 - INFO - Trading Bot Initialized.
-2024-12-18 16:20:48,434 - INFO - Configuration loaded successfully.
-2024-12-18 16:22:40,988 - INFO - Trading Bot Initialized.
-2024-12-18 16:22:40,990 - INFO - Configuration loaded successfully.
-2024-12-18 16:27:42,606 - INFO - Trading Bot Initialized.
-2024-12-18 16:27:42,613 - INFO - Configuration loaded successfully.
+2024-12-19 12:26:19,124 - INFO - Trading Bot Initialized.
+2024-12-19 12:26:19,127 - INFO - Configuration loaded successfully.
+2024-12-19 12:26:30,016 - INFO - User Inputs - Long Exchange: kucoin
+, Short Exchange: xt
+, Symbol: btc
+, Formatted Long Symbol: BTC
+, Formatted Short Symbol: btc
+, Total Amount: 1
+, Chunk Size: 0.1
+, Spread: 0.01
+
+2024-12-19 12:26:30,017 - INFO - User Inputs - Long Exchange: kucoin, Short Exchange: xt, Raw Symbol: btc, Formatted Long Symbol: BTC, Formatted Short Symbol: btc, Total Amount: 1, Chunk Size: 0.1, Spread: 0.01
+2024-12-19 12:26:31,332 - INFO - Authenticating XT WebSocket
+2024-12-19 12:26:31,336 - INFO - Remaining amount: 1, Order size: 0.1
+2024-12-19 12:26:31,338 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,339 - INFO - Remaining amount: 0.9, Order size: 0.1
+2024-12-19 12:26:31,340 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,349 - INFO - Remaining amount: 0.8, Order size: 0.1
+2024-12-19 12:26:31,350 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,352 - INFO - Remaining amount: 0.7, Order size: 0.1
+2024-12-19 12:26:31,353 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,355 - INFO - Remaining amount: 0.6, Order size: 0.1
+2024-12-19 12:26:31,358 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,359 - INFO - Remaining amount: 0.5, Order size: 0.1
+2024-12-19 12:26:31,361 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,362 - INFO - Remaining amount: 0.4, Order size: 0.1
+2024-12-19 12:26:31,363 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,363 - INFO - Remaining amount: 0.3, Order size: 0.1
+2024-12-19 12:26:31,364 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,366 - INFO - Remaining amount: 0.2, Order size: 0.1
+2024-12-19 12:26:31,367 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,367 - INFO - Remaining amount: 0.1, Order size: 0.1
+2024-12-19 12:26:31,367 - INFO - Executing trade - Long: BTC-USDT, Short: btc_usdt, Amount: 0.1
+
+2024-12-19 12:26:31,368 - INFO - Trading completed.
+2024-12-19 12:26:32,814 - INFO - XT.com subscription sent: {'method': 'subscribe', 'params': ['depth_update@btc_usdt'], 'id': 1, 'timestamp': 1734607592814}
+2024-12-19 12:26:33,081 - INFO - Connected to KuCoin WebSocket: {"id":"3cab18e9-bb66-4865-a616-87b3eda15fd6","type":"welcome"}
+2024-12-19 12:26:33,082 - INFO - KuCoin subscription sent: {'id': 1734607593082, 'type': 'subscribe', 'topic': '/market/level2:BTC-USDT', 'response': True}
+2024-12-19 12:26:33,116 - INFO - XT.com message received: {'id': '1', 'code': 0, 'msg': 'SUCCESS', 'method': 'subscribe'}
+2024-12-19 12:26:33,116 - WARNING - XT.com message does not contain valid bids and asks.
+2024-12-19 12:26:33,306 - INFO - XT.com message received: {'topic': 'depth_update', 'event': 'depth_update@btc_usdt', 'data': {'s': 'btc_usdt', 'fi': 1734439660480, 'i': 1734439660495, 'a': [['102491.30', '0.00104'], ['102491.74', '0.00981'], ['102491.75', '0.00000'], ['102493.27', '0.00000'], ['102493.51', '0.43381']], 'b': [['102490.26', '0.00456'], ['102489.62', '0.54528'], ['102489.40', '0.00000'], ['102489.30', '0.00000'], ['102489.17', '0.47751'], ['102488.56', '0.00000'], ['102488.31', '0.18176'], ['102481.84', '0.08169'], ['102481.83', '0.00000']]}}
+2024-12-19 12:26:33,309 - INFO - XT.com order book updated.
+2024-12-19 12:26:33,310 - INFO - Top 5 Asks: [(102491.3, 0.00104), (102491.74, 0.00981), (102493.51, 0.43381)]
+2024-12-19 12:26:33,312 - INFO - Top 5 Bids: [(102490.26, 0.00456), (102489.62, 0.54528), (102489.17, 0.47751), (102488.31, 0.18176), (102481.84, 0.08169)]
+2024-12-19 12:26:33,527 - INFO - XT.com message received: {'topic': 'depth_update', 'event': 'depth_update@btc_usdt', 'data': {'s': 'btc_usdt', 'fi': 1734439660496, 'i': 1734439660496, 'b': [['102490.26', '0.00457']]}}
+2024-12-19 12:26:33,527 - WARNING - XT.com message does not contain valid bids and asks.
+2024-12-19 12:26:33,715 - INFO - XT.com message received: {'topic': 'depth_update', 'event': 'depth_update@btc_usdt', 'data': {'s': 'btc_usdt', 'fi': 1734439660497, 'i': 1734439660588, 'a': [['102480.53', '0.00388'], ['102480.96', '0.02225'], ['102481.00', '0.00000'], ['102481.57', '0.13263'], ['102481.79', '0.54593'], ['102481.96', '0.00000'], ['102482.35', '0.52402'], ['102483.12', '0.20834'], ['102483.19', '0.00000'], ['102483.42', '0.23700'], ['102483.99', '0.19832'], ['102484.88', '0.29317'], ['102485.24', '0.49865'], ['102485.80', '0.07599'], ['102486.40', '0.51968'], ['102486.67', '0.25025'], ['102487.34', '0.40390'], ['102487.70', '0.19182'], ['102488.30', '0.10713'], ['102488.76', '0.00000'], ['102488.96', '0.18154'], ['102489.37', '0.43324'], ['102490.08', '0.41986'], ['102490.90', '0.06948'], ['102491.03', '0.08190'], ['102491.30', '0.00000'], ['102750.19', '0.00000'], ['102750.79', '0.00000'], ['102751.40', '0.00000'], ['102751.82', '0.00000'], ['102752.53', '0.00000'], ['102753.10', '0.00000'], ['102753.49', '0.00000'], ['102754.13', '0.00000'], ['102754.72', '0.00000'], ['102755.24', '0.00000'], ['102756.06', '0.00000'], ['102756.49', '0.00000'], ['102757.09', '0.00000'], ['102757.43', '0.00000'], ['102758.22', '0.00000'], ['102758.68', '0.00000'], ['102759.25', '0.00000'], ['102759.80', '0.00000'], ['102760.17', '0.00000'], ['102760.66', '0.00000']], 'b': [['102490.26', '0.00000'], ['102489.62', '0.00000'], ['102489.17', '0.00000'], ['102488.31', '0.00000'], ['102487.77', '0.00000'], ['102487.67', '0.00000'], ['102486.67', '0.00000'], ['102486.29', '0.00000'], ['102485.88', '0.00000'], ['102485.43', '0.00000'], ['102484.48', '0.00000'], ['102484.38', '0.00000'], ['102483.63', '0.00000'], ['102483.23', '0.00000'], ['102482.30', '0.00000'], ['102481.84', '0.00000'], ['102481.42', '0.00000'], ['102481.16', '0.00000'], ['102480.59', '0.00000'], ['102479.70', '0.00000'], ['102479.49', '0.00212'], ['102479.22', '0.00000'], ['102220.07', '0.12480'], ['102219.67', '0.10683'], ['102219.15', '0.01783'], ['102218.68', '0.31375'], ['102218.04', '0.19099'], ['102217.44', '0.17476'], ['102216.84', '0.48247'], ['102216.47', '0.43707'], ['102215.93', '0.11462'], ['102215.43', '0.11253'], ['102214.64', '0.08768'], ['102213.98', '0.15507'], ['102213.70', '0.12783'], ['102213.24', '0.32882'], ['102212.47', '0.01689'], ['102211.98', '0.16775'], ['102211.30', '0.39556'], ['102211.16', '0.48389'], ['102210.26', '0.54825'], ['102209.74', '0.34176']]}}
+2024-12-19 12:26:33,716 - INFO - XT.com order book updated.
+2024-12-19 12:26:33,717 - INFO - Top 5 Asks: [(102480.53, 0.00388), (102480.96, 0.02225), (102481.57, 0.13263), (102481.79, 0.54593), (102482.35, 0.52402)]
+2024-12-19 12:26:33,718 - INFO - Top 5 Bids: [(102479.49, 0.00212), (102220.07, 0.1248), (102219.67, 0.10683), (102219.15, 0.01783), (102218.68, 0.31375)]
+2024-12-19 12:26:34,190 - INFO - XT.com message received: {'topic': 'depth_update', 'event': 'depth_update@btc_usdt', 'data': {'s': 'btc_usdt', 'fi': 1734439660589, 'i': 1734439660598, 'a': [['102480.52', '0.00386'], ['102480.53', '0.00000'], ['102483.12', '0.00000'], ['102483.29', '0.15476']], 'b': [['102479.49', '0.00000'], ['102479.48', '0.00386'], ['102478.85', '0.00000'], ['102478.71', '0.55154'], ['102475.33', '0.00000'], ['102475.30', '0.13809']]}}
+2024-12-19 12:26:34,191 - INFO - XT.com order book updated.
+2024-12-19 12:26:34,192 - INFO - Top 5 Asks: [(102480.52, 0.00386), (102483.29, 0.15476)]
+2024-12-19 12:26:34,192 - INFO - Top 5 Bids: [(102479.48, 0.00386), (102478.71, 0.55154), (102475.3, 0.13809)]
+2024-12-19 12:26:34,677 - INFO - XT.com message received: {'topic': 'depth_update', 'event': 'depth_update@btc_usdt', 'data': {'s': 'btc_usdt', 'fi': 1734439660599, 'i': 1734439660614, 'a': [['102480.52', '0.00361'], ['102480.96', '0.00000'], ['102481.07', '0.20462'], ['102485.24', '0.00000'], ['102485.31', '0.15205']], 'b': [['102479.48', '0.00187'], ['102478.95', '0.40773'], ['102478.92', '0.00000'], ['102478.71', '0.00000'], ['102476.66', '0.00000'], ['102476.55', '0.19117'], ['102475.71', '0.28415'], ['102475.30', '0.00000']]}}
+2024-12-19 12:26:34,678 - INFO - XT.com order book updated.
+2024-12-19 12:26:34,679 - INFO - Top 5 Asks: [(102480.52, 0.00361), (102481.07, 0.20462), (102485.31, 0.15205)]
+2024-12-19 12:26:34,680 - INFO - Top 5 Bids: [(102479.48, 0.00187), (102478.95, 0.40773), (102476.55, 0.19117), (102475.71, 0.28415)]
+2024-12-19 12:26:34,909 - INFO - Closing WebSocket connections...
+2024-12-19 12:26:34,910 - INFO - WebSocket tasks cancelled.
